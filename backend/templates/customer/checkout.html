@@ -1,0 +1,295 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Secure Checkout{% endblock %}
+{% block page_subtitle %}Select delivery destination, payment method, and confirm your order{% endblock %}
+
+{% block panel_content %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<form method="POST" action="/customer/checkout/" id="checkoutForm">
+    {% csrf_token %}
+
+    <div class="customer-checkout-layout" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; margin-bottom: 40px;">
+        
+        <!-- Left: Address & Payment Methods -->
+        <div class="customer-checkout-main" style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <!-- 1. Select Delivery Address -->
+            <div id="deliveryAddress" class="glass-card" style="padding: 24px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i> 1. Delivery Address
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% if not addresses %}
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;">No saved delivery addresses yet. Add one below to continue.</p>
+                    {% endif %}
+                    {% for addr in addresses %}
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--bg-surface); border: 2px solid {% if forloop.first %}var(--primary){% else %}var(--border-color){% endif %}; border-radius: 12px; cursor: pointer;">
+                            <input type="radio" name="address_id" value="{{ addr.id }}" onchange="toggleCheckoutAddressFields()" {% if selected_address_id == addr.id %}checked{% endif %} style="margin-top: 4px;">
+                            <div class="checkout-option-content" style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <strong style="font-size: 0.95rem; color: var(--text-primary);">{{ addr.full_name }}</strong>
+                                    <span class="role-badge customer">{{ addr.address_type|upper }}</span>
+                                    <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ addr.phone }}</span>
+                                </div>
+                                <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+                                    {{ addr.street_address }}, {{ addr.city }}, {{ addr.state }} - <strong>{{ addr.pincode }}</strong>
+                                </p>
+                            </div>
+                        </label>
+                    {% endfor %}
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="address_id" value="new" onchange="toggleCheckoutAddressFields()" {% if new_address_selected %}checked{% endif %}>
+                        <span style="font-weight: 700; color: var(--text-primary);"><i class="fa-solid fa-plus" style="color: var(--primary);"></i> Add a new delivery address</span>
+                    </label>
+                    <div id="checkoutNewAddressFields" class="checkout-address-fields" {% if not new_address_selected %}hidden{% endif %} style="display: {% if new_address_selected %}grid{% else %}none{% endif %}; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 16px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 12px;">
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem;">Full name
+                            <input name="new_full_name" value="{{ new_address_values.new_full_name|default:'' }}" maxlength="100" autocomplete="name" data-address-required>
+                        </label>
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem;">Phone
+                            <input name="new_phone" value="{{ new_address_values.new_phone|default:'' }}" maxlength="20" autocomplete="tel" data-address-required>
+                        </label>
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem; grid-column: 1 / -1;">Street address
+                            <input name="new_street_address" value="{{ new_address_values.new_street_address|default:'' }}" maxlength="255" autocomplete="street-address" data-address-required>
+                        </label>
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem;">City
+                            <input name="new_city" value="{{ new_address_values.new_city|default:'' }}" maxlength="100" autocomplete="address-level2" data-address-required>
+                        </label>
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem;">State
+                            <input name="new_state" value="{{ new_address_values.new_state|default:'' }}" maxlength="100" autocomplete="address-level1" data-address-required>
+                        </label>
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem;">PIN code
+                            <input name="new_pincode" value="{{ new_address_values.new_pincode|default:'' }}" maxlength="6" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{6}" data-address-required>
+                        </label>
+                        <label style="display: grid; gap: 6px; color: var(--text-secondary); font-size: 0.82rem;">Address type
+                            <select name="new_address_type">
+                                <option value="home" {% if new_address_values.new_address_type == 'home' or not new_address_values.new_address_type %}selected{% endif %}>Home</option>
+                                <option value="work" {% if new_address_values.new_address_type == 'work' %}selected{% endif %}>Work</option>
+                                <option value="other" {% if new_address_values.new_address_type == 'other' %}selected{% endif %}>Other</option>
+                            </select>
+                        </label>
+                        <button type="submit" name="checkout_action" value="save_address" class="checkout-save-address">
+                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Address
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Select Payment Method & Dynamic UPI QR -->
+            <div id="checkoutPaymentSection" class="glass-card" style="padding: 24px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-credit-card" style="color: #10b981;"></i> 2. Payment Method
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- UPI Option (Razorpay verified flow) -->
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="payment_method" value="upi" checked onchange="togglePaymentView('upi')">
+                        <i class="fa-brands fa-google-pay" style="font-size: 1.5rem; color: #4285f4;"></i>
+                        <div class="checkout-option-content" style="flex: 1;">
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">Instant UPI / Dynamic QR Code</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.78rem;">Google Pay, PhonePe, Paytm, BHIM</small>
+                        </div>
+                    </label>
+
+                    <!-- Razorpay displays the verified UPI QR inside its checkout modal -->
+                    <div id="upiQrSection" class="upi-qr-box">
+                        <i class="fa-solid fa-qrcode" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 8px;"></i>
+                        <h4 style="margin: 0 0 8px; font-size: 0.95rem; color: var(--text-primary);">Secure UPI QR Payment</h4>
+                        <small style="color: var(--text-muted); display: block;">Click Confirm & Place Order. Razorpay will open and show a verified QR for ₹{{ grand_total }}.</small>
+                    </div>
+
+                    <!-- E-Wallet Option -->
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="payment_method" value="wallet" onchange="togglePaymentView('wallet')">
+                        <i class="fa-solid fa-wallet" style="font-size: 1.3rem; color: #059669;"></i>
+                        <div class="checkout-option-content" style="flex: 1;">
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">ShopVerse E-Wallet</strong>
+                            <small style="display: block; color: #059669; font-size: 0.78rem; font-weight: 600;">Available Balance: ₹{{ wallet_balance }}</small>
+                        </div>
+                    </label>
+
+                    <!-- Card Option -->
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="payment_method" value="card" onchange="togglePaymentView('card')">
+                        <i class="fa-solid fa-credit-card" style="font-size: 1.3rem; color: #6366f1;"></i>
+                        <div class="checkout-option-content" style="flex: 1;">
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">Credit or Debit Card</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.78rem;">Visa, Mastercard, RuPay</small>
+                        </div>
+                    </label>
+
+                    <!-- COD Option -->
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="payment_method" value="cod" onchange="togglePaymentView('cod')">
+                        <i class="fa-solid fa-hand-holding-dollar" style="font-size: 1.3rem; color: #f59e0b;"></i>
+                        <div class="checkout-option-content" style="flex: 1;">
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">Cash on Delivery (COD)</strong>
+                            <small style="display: block; color: var(--text-muted); font-size: 0.78rem;">Pay cash or scan QR at doorstep via Rider</small>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Order Summary Breakdown -->
+        <div class="glass-card customer-checkout-summary" style="padding: 24px; height: fit-content;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; color: var(--text-primary);">Order Items ({{ cart_items.count }})</h3>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; max-height: 240px; overflow-y: auto; margin-bottom: 18px; padding-right: 4px;">
+                {% for item in cart_items %}
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem;">
+                        <img src="{{ item.product.main_image_url }}" alt="{{ item.product.title }}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #fff; border: 1px solid var(--border-color);">
+                        <div style="flex: 1; min-width: 0;">
+                            <h5 style="margin: 0; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.product.title }}</h5>
+                            <small style="color: var(--text-muted);">Qty: {{ item.quantity }} × ₹{{ item.product.selling_price }}</small>
+                            {% if item.product.seller_offer %}
+                                <small style="display: block; color: #059669; font-weight: 700;">{{ item.product.seller_offer.title }}: Save ₹{{ item.product.seller_offer.savings_amount }} each</small>
+                            {% endif %}
+                        </div>
+                        <strong style="color: var(--text-primary);">₹{{ item.subtotal }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem; border-top: 1px solid var(--border-color); padding-top: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Subtotal:</span>
+                    <strong>₹{{ subtotal }}</strong>
+                </div>
+                {% if seller_offer_discount > 0 %}
+                <div style="display: flex; justify-content: space-between; color: #059669;">
+                    <span>Product offer savings:</span>
+                    <strong>₹{{ seller_offer_discount }}</strong>
+                </div>
+                {% endif %}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Delivery Fee:</span>
+                    <strong style="color: {% if delivery_charge == 0 %}#10b981{% else %}var(--text-primary){% endif %};">
+                        {% if delivery_charge == 0 %}FREE{% else %}₹{{ delivery_charge }}{% endif %}
+                    </strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Tax / GST (5%):</span>
+                    <strong>₹{{ tax }}</strong>
+                </div>
+                {% if coupon_discount > 0 %}
+                <div style="display: flex; justify-content: space-between; color: #059669;">
+                    <span>Coupon Discount ({{ applied_coupon.code }}):</span>
+                    <strong>- ₹{{ coupon_discount }}</strong>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0;">
+                <strong style="font-size: 1.15rem; color: var(--text-primary);">Grand Total:</strong>
+                <strong style="font-size: 1.5rem; color: var(--primary);">₹{{ grand_total }}</strong>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label for="couponCode" style="display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Coupon Code (optional)</label>
+                <div class="checkout-coupon-row" style="display: flex; gap: 8px;">
+                    <input id="couponCode" type="text" name="coupon" placeholder="Enter coupon code" value="{{ coupon_code }}" onkeydown="if (event.key === 'Enter') { event.preventDefault(); applyCheckoutCoupon(); }" style="flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); text-transform: uppercase;">
+                    <button type="button" class="action-pill-btn" onclick="applyCheckoutCoupon()" style="background: var(--primary); color: #fff; border: none; white-space: nowrap;">Apply</button>
+                </div>
+                {% if coupon_error %}<small style="display: block; margin-top: 6px; color: #ef4444;">{{ coupon_error }}</small>{% endif %}
+                <small style="display: block; margin-top: 5px; color: var(--text-muted);"><a href="/customer/coupons/" style="color: var(--primary); font-weight: 700;">Browse active coupons and minimum spends</a></small>
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4);">
+                <i class="fa-solid fa-lock"></i> Confirm & Place Order
+            </button>
+        </div>
+
+    </div>
+</form>
+
+<script>
+function togglePaymentView(method) {
+    const upiBox = document.getElementById('upiQrSection');
+    if (upiBox) {
+        upiBox.style.display = method === 'upi' ? 'block' : 'none';
+    }
+}
+
+function toggleCheckoutAddressFields() {
+    const fields = document.getElementById('checkoutNewAddressFields');
+    const selectedAddress = document.querySelector('input[name="address_id"]:checked');
+    const useNewAddress = selectedAddress?.value === 'new';
+    if (fields) {
+        fields.hidden = !useNewAddress;
+        fields.style.display = useNewAddress ? 'grid' : 'none';
+        fields.querySelectorAll('[data-address-required]').forEach((input) => {
+            input.required = useNewAddress;
+        });
+    }
+}
+
+toggleCheckoutAddressFields();
+
+function applyCheckoutCoupon() {
+    const code = document.getElementById('couponCode')?.value.trim();
+    const url = new URL(window.location.href);
+    if (code) {
+        url.searchParams.set('coupon', code);
+    } else {
+        url.searchParams.delete('coupon');
+    }
+    window.location.href = url.toString();
+}
+
+document.getElementById('checkoutForm')?.addEventListener('submit', async function (event) {
+    if (event.submitter?.name === 'checkout_action' && event.submitter.value === 'save_address') return;
+    const method = document.querySelector('input[name="payment_method"]:checked')?.value;
+    if (!['upi', 'card'].includes(method)) return;
+    event.preventDefault();
+
+    const form = this;
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Opening payment...';
+    }
+
+    try {
+        const response = await fetch('/customer/razorpay/create-order/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({amount: {{ grand_total }}, purpose: 'checkout'})
+        });
+        const order = await response.json();
+        if (order.status !== 'success') throw new Error(order.message || 'Could not create payment order');
+
+        const razorpay = new Razorpay({
+            key: order.key_id,
+            amount: order.amount,
+            currency: order.currency,
+            name: 'ShopVerse',
+            description: 'Order payment',
+            order_id: order.order_id,
+            handler: async function (payment) {
+                const verification = await fetch('/customer/razorpay/verify-payment/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                    body: JSON.stringify({...payment, purpose: 'checkout', amount: {{ grand_total }}})
+                });
+                const result = await verification.json();
+                if (result.status !== 'success') throw new Error(result.message || 'Payment verification failed');
+                form.submit();
+            },
+            modal: {ondismiss: () => {if (submitButton) {submitButton.disabled = false; submitButton.textContent = 'Confirm & Place Order';}}},
+            theme: {color: '#4f46e5'}
+        });
+        razorpay.open();
+    } catch (error) {
+        if (submitButton) {submitButton.disabled = false; submitButton.textContent = 'Confirm & Place Order';}
+        alert(error.message);
+    }
+});
+
+function getCookie(name) {
+    return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1] || '';
+}
+</script>
+{% endblock %}

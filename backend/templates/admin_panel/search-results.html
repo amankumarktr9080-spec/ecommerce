@@ -1,0 +1,31 @@
+{% extends "base/panel_base.html" %}
+
+{% block page_title %}Admin Search{% endblock %}
+{% block page_subtitle %}Search orders, products, customers, sellers, and delivery partners{% endblock %}
+
+{% block panel_content %}
+<section class="glass-card" style="padding: 24px;">
+    <h2 style="margin: 0 0 18px; font-size: 1.15rem; color: var(--text-primary);">
+        {% if query %}{{ results|length }} results for “{{ query }}”{% else %}Enter a search term{% endif %}
+    </h2>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr><th>Type</th><th>Result</th><th>Details</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td><span class="badge badge-info">{{ result.type }}</span></td>
+                    <td><strong style="color: var(--text-primary);">{{ result.title }}</strong></td>
+                    <td style="color: var(--text-secondary);">{{ result.subtitle }}</td>
+                    <td><a href="{{ result.url }}" class="btn btn-secondary btn-sm" aria-label="Open {{ result.title }}"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px;">{% if query %}No matching admin records found.{% else %}Use the top search to find a record.{% endif %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

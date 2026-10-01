@@ -1,0 +1,168 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Store Analytics & Performance Reports{% endblock %}
+{% block page_subtitle %}Track sales growth, order velocity, return requests, and net seller earnings{% endblock %}
+
+{% block panel_content %}
+<!-- KPI Summary Grid -->
+<div class="kpi-grid" style="margin-bottom: 28px;">
+    <div class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Gross Store Sales</span>
+            <h3>₹{{ gross_sales|floatformat:2 }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-chart-line"></i> Delivered orders sales</span>
+        </div>
+    </div>
+
+    <div class="kpi-card info">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-bag-shopping"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Total Units Sold</span>
+            <h3>{{ units_sold }} Items</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-check"></i> {{ delivered_orders }} Completed Orders</span>
+        </div>
+    </div>
+
+    <div class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-percent"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>10% Platform Commission</span>
+            <h3>₹{{ admin_commissions|floatformat:2 }}</h3>
+            <span class="kpi-trend neutral">Deducted at settlement</span>
+        </div>
+    </div>
+
+    <div class="kpi-card danger">
+        <div class="kpi-icon-wrap danger">
+            <i class="fa-solid fa-arrow-rotate-left"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Return Requests</span>
+            <h3>{{ return_count }} Returns</h3>
+            <span class="kpi-trend down"><i class="fa-solid fa-arrow-rotate-left"></i> Recorded return requests</span>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px; font-size: 1.1rem; color: var(--text-primary);"><i class="fa-solid fa-chart-column" style="color: #f59e0b;"></i> Order Status Breakdown</h3>
+        <div style="height: 260px;"><canvas id="sellerStatusChart"></canvas></div>
+    </div>
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px; font-size: 1.1rem; color: var(--text-primary);"><i class="fa-solid fa-ranking-star" style="color: #ec4899;"></i> Top Products by Units</h3>
+        <div style="height: 260px;"><canvas id="sellerProductsChart"></canvas></div>
+    </div>
+</div>
+
+<!-- Visual Analytics Graphs -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 40px;">
+    <!-- Sales Velocity Line Chart -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Weekly Sales Velocity (₹)
+        </h3>
+        <div style="height: 260px;">
+            <canvas id="sellerSalesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Sales Donut -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-pie" style="color: #10b981;"></i> Top Selling Categories
+        </h3>
+        <div style="height: 260px;">
+            <canvas id="sellerCategoryDonut"></canvas>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof Chart !== 'undefined') {
+        const salesCtx = document.getElementById('sellerSalesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_month_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Gross Sales (₹)',
+                        data: {{ chart_monthly_sales|safe }},
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Net Seller Payout (₹)',
+                        data: {{ chart_monthly_net|safe }},
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#cbd5e1' } } },
+                scales: {
+                    x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } },
+                    y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } }
+                }
+            }
+        });
+
+        const catCtx = document.getElementById('sellerCategoryDonut').getContext('2d');
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_category_labels|safe }},
+                datasets: [{
+                    data: {{ chart_category_values|safe }},
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#cbd5e1' } } }
+            }
+        });
+
+        const statusCtx = document.getElementById('sellerStatusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_status_labels|safe }},
+                datasets: [{ label: 'Orders', data: {{ chart_status_values|safe }}, backgroundColor: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } }, y: { beginAtZero: true, ticks: { precision: 0, color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } } } }
+        });
+
+        const productsCtx = document.getElementById('sellerProductsChart').getContext('2d');
+        new Chart(productsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_product_labels|safe }},
+                datasets: [{ label: 'Units Sold', data: {{ chart_product_values|safe }}, backgroundColor: '#8b5cf6', borderRadius: 6 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { x: { beginAtZero: true, ticks: { precision: 0, color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } }, y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } } } }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

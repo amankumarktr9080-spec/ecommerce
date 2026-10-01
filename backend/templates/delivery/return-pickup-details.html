@@ -1,0 +1,28 @@
+{% extends "base/panel_base.html" %}
+
+{% block page_title %}Manual Return Pickup{% endblock %}
+{% block page_subtitle %}Confirm the customer return collected at the delivery address{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="max-width: 760px; margin: 0 auto 40px; padding: 26px;">
+    <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 20px;">
+        <div>
+            <span class="badge badge-warning">Pickup scheduled</span>
+            <h2 style="margin: 10px 0 4px; color: var(--text-primary);">Return #{{ pickup.id }}</h2>
+            <p style="margin: 0; color: var(--text-secondary);">Order #{{ pickup.order.order_number }} · {{ pickup.pickup_tracking_id }}</p>
+        </div>
+        <a href="tel:{{ pickup.order.customer_phone }}" class="action-pill-btn" style="text-decoration: none;">Call customer</a>
+    </div>
+    <div style="display: grid; gap: 12px; color: var(--text-secondary);">
+        <p style="margin: 0;"><strong>Customer:</strong> {{ pickup.customer.get_full_name|default:pickup.customer.username }}</p>
+        <p style="margin: 0;"><strong>Item:</strong> {{ pickup.order_item.product.title|default:'Return item' }} × {{ pickup.quantity }}</p>
+        <p style="margin: 0;"><strong>Reason:</strong> {{ pickup.get_reason_display }}</p>
+        <p style="margin: 0;"><strong>Address:</strong> {{ pickup.order.shipping_address }}</p>
+    </div>
+    <form method="POST" style="margin-top: 24px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="confirm_pickup">
+        <button type="submit" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none;">Confirm item picked up</button>
+    </form>
+</div>
+{% endblock %}

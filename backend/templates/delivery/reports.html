@@ -1,0 +1,36 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery Performance Reports{% endblock %}
+{% block page_subtitle %}Track completed jobs, payout performance, and delivery status{% endblock %}
+
+{% block panel_content %}
+<div class="kpi-grid" style="margin-bottom: 28px;">
+    <div class="kpi-card info"><div class="kpi-icon-wrap primary"><i class="fa-solid fa-route"></i></div><div class="kpi-meta"><span>Total Jobs</span><h3>{{ total_jobs }}</h3><span class="kpi-trend up">Assigned deliveries</span></div></div>
+    <div class="kpi-card success"><div class="kpi-icon-wrap success"><i class="fa-solid fa-circle-check"></i></div><div class="kpi-meta"><span>Completed Jobs</span><h3>{{ delivered_jobs }}</h3><span class="kpi-trend up">Successfully delivered</span></div></div>
+    <div class="kpi-card warning"><div class="kpi-icon-wrap warning"><i class="fa-solid fa-wallet"></i></div><div class="kpi-meta"><span>Total Earnings</span><h3>₹{{ total_earned|floatformat:2 }}</h3><span class="kpi-trend up">Delivery payouts</span></div></div>
+    <div class="kpi-card danger"><div class="kpi-icon-wrap danger"><i class="fa-solid fa-chart-line"></i></div><div class="kpi-meta"><span>Average per Job</span><h3>₹{{ average_earning|floatformat:2 }}</h3><span class="kpi-trend up">Completed job average</span></div></div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+    <div class="glass-card" style="padding: 24px;"><h3 class="report-card-title"><i class="fa-solid fa-chart-column"></i> Delivery Status</h3><div style="height: 280px;"><canvas id="deliveryStatusChart"></canvas></div></div>
+    <div class="glass-card" style="padding: 24px;"><h3 class="report-card-title"><i class="fa-solid fa-chart-line"></i> Earnings Summary</h3><div style="height: 280px;"><canvas id="deliveryEarningsChart"></canvas></div></div>
+</div>
+
+<div class="glass-card" style="padding: 24px; margin-bottom: 32px;">
+    <h3 class="report-card-title"><i class="fa-solid fa-chart-simple"></i> Weekly Deliveries & Trip Earnings</h3>
+    <div style="height: 280px;"><canvas id="deliveryWeeklyChart"></canvas></div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chartText = '#cbd5e1';
+    const grid = 'rgba(148, 163, 184, 0.18)';
+    new Chart(document.getElementById('deliveryStatusChart'), { type: 'bar', data: { labels: {{ chart_status_labels|safe }}, datasets: [{ label: 'Jobs', data: {{ chart_status_values|safe }}, backgroundColor: ['#4f46e5','#06b6d4','#10b981','#f59e0b','#ef4444'], borderRadius: 7 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: chartText }, grid: { color: grid } }, y: { beginAtZero: true, ticks: { color: chartText, precision: 0 }, grid: { color: grid } } }, plugins: { legend: { labels: { color: chartText } } } } });
+    new Chart(document.getElementById('deliveryEarningsChart'), { type: 'doughnut', data: { labels: {{ chart_earning_labels|safe }}, datasets: [{ data: {{ chart_earning_values|safe }}, backgroundColor: ['#10b981'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: chartText } } } } });
+    new Chart(document.getElementById('deliveryWeeklyChart'), { type: 'bar', data: { labels: {{ chart_labels|safe }}, datasets: [{ label: 'Earnings (₹)', data: {{ chart_earnings|safe }}, backgroundColor: '#10b981', borderRadius: 7 }, { type: 'line', label: 'Completed Trips', data: {{ chart_deliveries|safe }}, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.15)', yAxisID: 'trips', tension: 0.35, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: chartText }, grid: { color: grid } }, y: { beginAtZero: true, ticks: { color: chartText }, grid: { color: grid } }, trips: { position: 'right', beginAtZero: true, ticks: { color: '#a5b4fc', precision: 0 }, grid: { drawOnChartArea: false } } }, plugins: { legend: { labels: { color: chartText } } } } });
+});
+</script>
+{% endblock %}
+{% endblock %}

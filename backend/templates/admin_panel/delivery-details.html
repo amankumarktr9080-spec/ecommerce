@@ -1,0 +1,95 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Rider Profile: {{ partner.user.get_full_name|default:partner.user.username }}{% endblock %}
+{% block page_subtitle %}Delivery fleet partner vehicle credentials, OTP deliveries, and earnings{% endblock %}
+
+{% block panel_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <a href="/admin-panel/delivery-partners/" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Riders
+    </a>
+    <a href="/admin-panel/delivery-partners/{{ partner.id }}/toggle-status/" class="btn btn-{% if partner.is_approved %}secondary{% else %}primary{% endif %}">
+        {% if partner.is_approved %}
+        <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Suspend Rider Account
+        {% else %}
+        <i class="fa-solid fa-check" style="color: #10b981;"></i> Approve Rider
+        {% endif %}
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    <div class="glass-card" style="padding: 24px; height: fit-content;">
+        <h3 style="margin: 0 0 16px 0; color: var(--text-primary); font-size: 1.15rem;">{{ partner.user.get_full_name|default:partner.user.username }}</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Vehicle:</span>
+                <strong>{{ partner.vehicle_number }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Vehicle Type:</span>
+                <span>{{ partner.get_vehicle_type_display }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Driving License:</span>
+                <strong style="font-family: monospace;">{{ partner.driving_license }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Customer Rating:</span>
+                <strong style="color: #f59e0b;">★ {{ partner.rating }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Duty Status:</span>
+                <span class="badge" style="background: {% if partner.is_online %}rgba(16, 185, 129, 0.15){% else %}rgba(100, 116, 139, 0.15){% endif %}; color: {% if partner.is_online %}#10b981{% else %}var(--text-muted){% endif %};">
+                    {% if partner.is_online %}Online{% else %}Offline{% endif %}
+                </span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Payout Bank:</span>
+                <span>{{ partner.bank_name }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">UPI ID:</span>
+                <span>{{ partner.upi_id }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Handled Deliveries ({{ deliveries|length }})
+        </h3>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Delivered On</th>
+                        <th>Customer</th>
+                        <th>OTP Handover</th>
+                        <th>Rider Earning</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in deliveries %}
+                    <tr>
+                        <td><strong style="color: var(--primary);">#{{ d.order_number }}</strong></td>
+                        <td>{{ d.created_at|date:"d M Y" }}</td>
+                        <td>{{ d.user.get_full_name|default:d.user.username }}</td>
+                        <td><span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-family: monospace;">{{ d.delivery_otp }}</span></td>
+                        <td><strong style="color: #10b981;">₹{{ d.delivery_partner_earning }}</strong></td>
+                        <td><span class="badge badge-success">{{ d.get_status_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No trips completed yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

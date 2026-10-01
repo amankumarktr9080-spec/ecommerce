@@ -1,0 +1,64 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Roles & Granular Permissions{% endblock %}
+{% block page_subtitle %}Ecosystem RBAC role definitions across Customer, Seller, Delivery Partner, and Admin panels{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-lock" style="color: var(--primary);"></i> Ecosystem RBAC Access Matrix
+    </h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 8px 0; color: var(--text-primary);"><i class="fa-solid fa-user" style="color: var(--primary);"></i> Customer Panel</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+                <li>Browse products with lens zoom & specs</li>
+                <li>Public registration & Google 1-click OAuth</li>
+                <li>Place orders, Dynamic UPI QR payment</li>
+                <li>Live Leaflet order tracking with 4-digit OTP</li>
+                <li>Submit reviews with star ratings & photo proof</li>
+                <li>Request Return & Replacement within valid window</li>
+            </ul>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 8px 0; color: var(--text-primary);"><i class="fa-solid fa-store" style="color: #10b981;"></i> Seller Panel</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+                <li><strong>Admin-Only Onboarding</strong> (Login-only access)</li>
+                <li>List products with automatic 10% platform commission formula</li>
+                <li>Set custom Return & Replacement policy & days</li>
+                <li>Fulfill orders: Accept ➔ Pack ➔ Ship</li>
+                <li>Approve return claims and inspect photo proof</li>
+                <li>View net earnings ledger after 10% platform deduction</li>
+            </ul>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 8px 0; color: var(--text-primary);"><i class="fa-solid fa-motorcycle" style="color: #f59e0b;"></i> Delivery Partner Panel</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+                <li><strong>Admin-Only Onboarding</strong> (Login-only access)</li>
+                <li>Duty toggle (Online / Offline)</li>
+                <li>Accept nearby pickup requests</li>
+                <li>Live GPS turn-by-turn navigation</li>
+                <li><strong>Doorstep 4-digit OTP verification</strong></li>
+                <li>Customer digital touch signature capture</li>
+                <li>Automatic delivery fee wallet payout credit</li>
+            </ul>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 8px 0; color: var(--text-primary);"><i class="fa-solid fa-shield-halved" style="color: #ec4899;"></i> Admin Control Panel</h4>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+                <li>Onboard & approve Sellers & Delivery Partners</li>
+                <li>Audit 10% platform commission ledger & payouts</li>
+                <li>Catalog management with unique automated item codes</li>
+                <li>Live fleet telemetry map with active rider tracking</li>
+                <li>Resolve disputed returns and issue instant wallet refunds</li>
+                <li>Executive AI Intelligence Copilot integration</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

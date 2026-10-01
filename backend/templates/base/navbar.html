@@ -1,0 +1,86 @@
+{% load static %}
+
+<header class="navbar" style="background: var(--bg-surface); border-bottom: 1px solid var(--border-color); padding: 12px 24px; position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px);">
+
+    <div class="navbar-container" style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+
+        <!-- Logo & Brand Name -->
+        <a href="/" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <span style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;">ShopVerse</span>
+        </a>
+
+        <!-- Search Input with Voice Mic -->
+        <div class="navbar-search" style="flex: 1; max-width: 500px; position: relative;">
+            <form action="/customer/products/" method="GET" data-suggestions-url="/customer/search/" data-product-detail-url="/customer/product/{id}/" style="display: flex; align-items: center;">
+                <input type="search" name="q" id="globalSearchInput" data-product-search placeholder="Search products, categories, brands..." autocomplete="off"
+                       style="width: 100%; padding: 10px 42px 10px 16px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                <button type="button" onclick="startVoiceSearch()" title="Voice Search" style="position: absolute; right: 40px; background: none; border: none; color: var(--primary); cursor: pointer; font-size: 1rem;">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+                <button type="submit" style="position: absolute; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+            <div id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Search suggestions"></div>
+        </div>
+
+        <!-- Navigation Links (Protected for Unauthenticated Visitors) -->
+        <nav class="navbar-menu" style="display: flex; align-items: center; gap: 20px;">
+            <a href="/" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-primary); font-weight: 600; font-size: 0.9rem;">
+                <i class="fa-solid fa-house" style="color: var(--primary);"></i>
+                <span data-i18n="home">Home</span>
+            </a>
+
+            <a href="/customer/products/" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-primary); font-weight: 600; font-size: 0.9rem;">
+                <i class="fa-solid fa-shop" style="color: #10b981;"></i>
+                <span data-i18n="shop">Shop</span>
+            </a>
+
+            <a href="/customer/wishlist/" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-primary); font-weight: 600; font-size: 0.9rem;">
+                <i class="fa-solid fa-heart" style="color: #ef4444;"></i>
+                <span data-i18n="wishlist">Wishlist</span>
+            </a>
+
+            <a href="/customer/cart/" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-primary); font-weight: 600; font-size: 0.9rem; position: relative;">
+                <i class="fa-solid fa-cart-shopping" style="color: #f59e0b;"></i>
+                <span data-i18n="cart">Cart</span>
+            </a>
+
+            <a href="/contact/" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-primary); font-weight: 600; font-size: 0.9rem;">
+                <i class="fa-solid fa-headset" style="color: var(--primary);"></i>
+                <span data-i18n="support">Support</span>
+            </a>
+        </nav>
+
+        <!-- Right Tools: 1-Touch Language Pill Toggle, Dark/Light Mode, Account Button -->
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <!-- 1-Touch Language Toggle Button -->
+            <button type="button" class="action-pill-btn" id="publicLangToggleBtn" onclick="toggleLanguage()" title="Touch to Switch Language (English / Hindi)">
+                <i class="fa-solid fa-globe"></i> <span id="publicLangLabel">English</span>
+            </button>
+
+            <!-- Light / Dark Mode Toggle Button -->
+            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Theme"
+                    style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem;">
+                <i class="fa-solid fa-moon" id="publicThemeIcon"></i>
+            </button>
+
+            <!-- User Auth Profile / Login Button -->
+            {% if request.user.is_authenticated %}
+                <a href="{% if request.user.role == 'seller' %}/seller/dashboard/{% elif request.user.role == 'delivery' %}/delivery/dashboard/{% elif request.user.role == 'admin' %}/admin-panel/dashboard/{% else %}/customer/dashboard/{% endif %}"
+                   class="btn btn-primary" style="padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-user-gear"></i> My Panel
+                </a>
+            {% else %}
+                <a href="/auth/login/" class="btn btn-primary" style="padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Login
+                </a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</header>

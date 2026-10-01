@@ -1,0 +1,46 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Admin Profile{% endblock %}
+{% block page_subtitle %}View your administrator account details and manage account security{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 28px; max-width: 800px; margin: 0 auto 40px;">
+    <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+        <div style="width: 72px; height: 72px; flex: 0 0 72px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem;"><i class="fa-solid fa-user-shield"></i></div>
+        <div>
+            <h3 style="margin: 0; color: var(--text-primary);">{{ admin_user.get_full_name|default:admin_user.username }}</h3>
+            <p style="margin: 4px 0 0; color: var(--text-secondary);">System Administrator</p>
+        </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+        <div><small>User ID</small><strong style="display: block;">{{ admin_user.username }}</strong></div>
+        <div><small>First Name</small><strong style="display: block;">{{ admin_user.first_name|default:'Not provided' }}</strong></div>
+        <div><small>Last Name</small><strong style="display: block;">{{ admin_user.last_name|default:'Not provided' }}</strong></div>
+        <div><small>Email</small><strong style="display: block; overflow-wrap: anywhere;">{{ admin_user.email|default:'Not provided' }}</strong></div>
+        <div><small>Mobile</small><strong style="display: block;">{{ admin_user.phone|default:'Not provided' }}</strong></div>
+        <div><small>Role</small><strong style="display: block;">{{ admin_user.get_role_display }}</strong></div>
+        <div><small>Member Since</small><strong style="display: block;">{{ admin_user.date_joined|date:'d M Y' }}</strong></div>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px;">
+        <button type="button" class="btn btn-primary" data-profile-panel-toggle="adminProfileEditPanel" aria-expanded="false"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+        <button type="button" class="btn btn-secondary" data-profile-panel-toggle="adminPasswordPanel" aria-expanded="false"><i class="fa-solid fa-key"></i> Reset Password</button>
+    </div>
+</div>
+<div id="adminProfileEditPanel" style="display: {% if profile_edit_open %}block{% else %}none{% endif %};" class="glass-card profile-edit-panel">
+        <form method="POST" action="{% url 'admin_panel:profile' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            {% csrf_token %}<input type="hidden" name="action" value="save_profile">
+            <label>First Name<input class="form-control" name="first_name" value="{{ admin_user.first_name }}"></label>
+            <label>Last Name<input class="form-control" name="last_name" value="{{ admin_user.last_name }}"></label>
+            <label>Email<input class="form-control" type="email" name="email" value="{{ admin_user.email }}"></label>
+            <label>Phone<input class="form-control" type="tel" name="phone" value="{{ admin_user.phone }}"></label>
+            <div style="display: flex; gap: 8px; align-items: center; grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+                <a href="{% url 'admin_panel:profile' %}" class="btn btn-secondary" style="text-decoration: none;">Cancel</a>
+            </div>
+        </form>
+</div>
+<div id="adminPasswordPanel" style="display: {% if profile_password_open %}block{% else %}none{% endif %}; max-width: 800px; margin: 0 auto 40px;">{% include "base/change-password.html" %}</div>
+<script src="{% static 'js/profile-panels.js' %}" defer></script>
+{% endblock %}

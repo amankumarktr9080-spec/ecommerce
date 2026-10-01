@@ -1,0 +1,63 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Customer Support & Helpdesk{% endblock %}
+{% block page_subtitle %}Raise and manage your support tickets{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; max-width: 900px; margin: 0 auto 40px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">Customer Support</h3>
+    <form method="POST" action="/customer/support/" style="display: grid; gap: 12px; margin-bottom: 28px;">
+        {% csrf_token %}
+        <label>Subject
+            <input name="subject" type="text" maxlength="200" required style="display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-app); color: var(--text-primary);">
+        </label>
+        <label>Message
+            <textarea name="description" rows="4" required style="display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-app); color: var(--text-primary);"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary" style="justify-self: start;">Submit Ticket</button>
+    </form>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <h3 style="font-size: 1.05rem; margin: 0; color: var(--text-primary);">Your Support Tickets ({{ ticket_count }})</h3>
+        {% if ticket_count > 3 %}
+        <a class="btn btn-secondary btn-sm" href="{% if show_all_tickets %}/customer/support/{% else %}/customer/support/?all=1{% endif %}">{% if show_all_tickets %}Show less{% else %}View all{% endif %}</a>
+        {% endif %}
+    </div>
+    <div class="table-container">
+        <table class="data-table">
+            <thead><tr><th>Ticket #</th><th>Subject</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for ticket in tickets %}
+                <tr>
+                    <td>{{ ticket.ticket_id }}</td><td>{{ ticket.subject }}</td><td>{{ ticket.created_at|date:"d M Y" }}</td><td>{{ ticket.get_status_display }}</td>
+                    <td style="white-space: nowrap;">
+                        {% if ticket.status == 'open' %}
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('editTicket{{ ticket.id }}').showModal()">Edit</button>
+                        <form method="post" action="{% if show_all_tickets %}?all=1{% endif %}" style="display: inline;" onsubmit="return confirm('Cancel this support ticket?');">
+                            {% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="ticket_id" value="{{ ticket.ticket_id }}"><input type="hidden" name="show_all" value="{{ show_all_tickets|yesno:'1,0' }}">
+                            <button type="submit" class="btn btn-secondary btn-sm">Cancel</button>
+                        </form>
+                        {% else %}<button type="button" class="btn btn-secondary btn-sm" disabled style="cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2218%22%20height%3D%2218%22%20viewBox%3D%220%200%2018%2018%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%229%22%20r%3D%227%22%20fill%3D%22none%22%20stroke%3D%22%23ef4444%22%20stroke-width%3D%222%22%2F%3E%3Cline%20x1%3D%224%22%20y1%3D%2214%22%20x2%3D%2214%22%20y2%3D%224%22%20stroke%3D%22%23ef4444%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E') 9 9, not-allowed;">Edit</button> <button type="button" class="btn btn-secondary btn-sm" disabled style="cursor: url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2218%22%20height%3D%2218%22%20viewBox%3D%220%200%2018%2018%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%229%22%20r%3D%227%22%20fill%3D%22none%22%20stroke%3D%22%23ef4444%22%20stroke-width%3D%222%22%2F%3E%3Cline%20x1%3D%224%22%20y1%3D%2214%22%20x2%3D%2214%22%20y2%3D%224%22%20stroke%3D%22%23ef4444%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E') 9 9, not-allowed;">Cancel</button>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No support tickets yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% for ticket in tickets %}
+        {% if ticket.status == 'open' %}
+        <dialog id="editTicket{{ ticket.id }}" style="width: min(520px, calc(100vw - 32px)); border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary);">
+            <form method="post" action="{% if show_all_tickets %}?all=1{% endif %}" style="display: grid; gap: 12px;">
+                {% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="ticket_id" value="{{ ticket.ticket_id }}"><input type="hidden" name="show_all" value="{{ show_all_tickets|yesno:'1,0' }}">
+                <h3 style="margin: 0;">Edit {{ ticket.ticket_id }}</h3>
+                <label>Subject<input name="subject" maxlength="200" required value="{{ ticket.subject }}" style="display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-app); color: var(--text-primary);"></label>
+                <label>Description<textarea name="description" rows="5" required style="display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-app); color: var(--text-primary);">{{ ticket.message }}</textarea></label>
+                <div style="display: flex; justify-content: flex-end; gap: 8px;"><button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">Close</button><button type="submit" class="btn btn-primary">Save changes</button></div>
+            </form>
+        </dialog>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Inventory & Stock Control{% endblock %}
+{% block page_subtitle %}Quickly update stock levels and prevent out-of-stock cancellations{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--text-primary);">
+        Current Inventory Stock Levels
+    </h3>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+                <tr style="background: var(--bg-app); text-align: left;">
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Product & Code</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">SKU</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Current Units</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Stock Health</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Quick Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+                            <img src="{{ p.main_image_url }}" alt="{{ p.title }}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #fff; border: 1px solid var(--border-color);">
+                            <div>
+                                <span style="font-size: 0.72rem; font-weight: 800; color: var(--primary);">{{ p.item_code }}</span>
+                                <h4 style="margin: 0; font-size: 0.88rem; color: var(--text-primary);">{{ p.title|truncatechars:28 }}</h4>
+                            </div>
+                        </td>
+                        <td style="padding: 12px 14px;"><code>{{ p.sku }}</code></td>
+                        <td style="padding: 12px 14px; font-weight: 700; font-size: 1rem;">{{ p.stock }}</td>
+                        <td style="padding: 12px 14px;">
+                            {% if p.stock == 0 %}
+                                <span class="role-badge" style="background: #fee2e2; color: #dc2626;">OUT OF STOCK</span>
+                            {% elif p.stock < 15 %}
+                                <span class="role-badge" style="background: #fef3c7; color: #b45309;">LOW STOCK</span>
+                            {% else %}
+                                <span class="role-badge delivery">IN STOCK</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px 14px;">
+                            <form method="POST" action="/seller/inventory/" style="display: flex; gap: 8px; margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_stock">
+                                <input type="hidden" name="product_id" value="{{ p.id }}">
+                                <input type="number" name="stock" value="{{ p.stock }}" min="0" style="width: 80px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                                <button type="submit" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; padding: 6px 12px; font-size: 0.78rem;">
+                                    Save
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

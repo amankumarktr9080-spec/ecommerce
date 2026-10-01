@@ -1,0 +1,155 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Customer Dashboard{% endblock %}
+{% block page_subtitle %}Track your orders, saved items, and personalized deals{% endblock %}
+
+{% block panel_content %}
+<!-- KPI Cards Grid -->
+<div class="kpi-grid">
+    <a href="/customer/orders/" class="kpi-card info">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-box-archive"></i>
+        </div>
+        <div class="kpi-meta">
+            <span data-i18n="orders">Total Orders</span>
+            <h3>{{ total_orders_count }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-arrow-up"></i> Lifetime purchases</span>
+        </div>
+    </a>
+
+    <a href="/customer/orders/" class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <div class="kpi-meta">
+            <span data-i18n="active_delivery">Active Orders</span>
+            <h3>{{ active_orders_count }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-circle-dot"></i> In Transit / Processing</span>
+        </div>
+    </a>
+
+    <a href="/customer/payments/" class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>E-Wallet Balance</span>
+            <h3>₹{{ wallet_balance }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-shield-halved"></i> Instant refund ready</span>
+        </div>
+    </a>
+
+    <a href="/customer/rewards/" class="kpi-card danger">
+        <div class="kpi-icon-wrap danger">
+            <i class="fa-solid fa-coins"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Reward Points</span>
+            <h3>{{ reward_points }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-gift"></i> Worth ₹{{ reward_value }}</span>
+        </div>
+    </a>
+</div>
+
+<!-- Flash Sale / Trending Banner -->
+<div class="glass-card" style="margin-bottom: 28px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(147, 51, 234, 0.12) 100%); border: 1px solid rgba(99, 102, 241, 0.3);">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #ef4444; color: #fff; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                <i class="fa-solid fa-bolt"></i> Flash Sale Live
+            </span>
+            <h2 style="font-size: 1.4rem; font-weight: 700; margin: 8px 0 4px; color: var(--text-primary);">Super Saver Weekend Festival</h2>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem;">Grab up to 60% off on top electronics, fashion, and home essentials!</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="text-align: right;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Offer ends in</span>
+                <strong style="font-size: 1.1rem; color: #ef4444; font-family: monospace;">04h : 22m : 45s</strong>
+            </div>
+            <a href="/customer/products/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; padding: 10px 20px; font-size: 0.88rem;">
+                Explore Deals <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Main 2-Column Grid: Recent Orders + Featured Deals -->
+<div class="customer-dashboard-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 32px;">
+    
+    <!-- Recent Orders Table Card -->
+    <div class="glass-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-box-open" style="color: var(--primary);"></i> Recent Orders
+            </h3>
+            <a href="/customer/orders/" style="font-size: 0.82rem; color: var(--primary); font-weight: 600;">View All Orders</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for order in recent_orders %}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; gap: 12px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">#{{ order.order_number }}</strong>
+                            <span class="role-badge {% if order.status == 'delivered' %}delivery{% elif order.status == 'out_for_delivery' %}admin{% else %}customer{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        <small style="color: var(--text-muted); font-size: 0.78rem;">{{ order.created_at|date:"d M Y, h:i A" }} • {{ order.items.count }} item(s)</small>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <strong style="font-size: 1rem; color: var(--text-primary); display: block;">₹{{ order.grand_total }}</strong>
+                        <a href="/customer/orders/{{ order.id }}/track/" style="font-size: 0.78rem; color: var(--primary); font-weight: 600;">
+                            <i class="fa-solid fa-location-crosshairs"></i> Track
+                        </a>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    <i class="fa-solid fa-bag-shopping" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                    <p>No orders yet. Start shopping today!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recommended / Flash Deals Carousel -->
+    <div class="glass-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-fire" style="color: #ef4444;"></i> Recommended For You
+            </h3>
+            <a href="/customer/products/" style="font-size: 0.82rem; color: var(--primary); font-weight: 600;">Explore All</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for p in featured_products %}
+                <div style="display: flex; align-items: center; gap: 14px; padding: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <img src="{{ p.main_image_url }}" alt="{{ p.title }}" style="width: 56px; height: 56px; object-fit: contain; border-radius: 8px; background: #fff;">
+                    <div style="flex: 1; min-width: 0;">
+                        <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase;">{{ p.item_code }}</span>
+                        <h4 style="font-size: 0.85rem; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <a href="/customer/product/{{ p.id }}/" style="color: var(--text-primary); text-decoration: none;">{{ p.title }}</a>
+                        </h4>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="font-size: 0.92rem; color: var(--text-primary);">₹{{ p.selling_price }}</strong>
+                            <small style="text-decoration: line-through; color: var(--text-muted);">₹{{ p.mrp }}</small>
+                            <span style="color: #059669; font-size: 0.75rem; font-weight: 700;">★ {{ p.average_rating }}</span>
+                        </div>
+                    </div>
+                    <form method="POST" action="/customer/cart/">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add">
+                        <input type="hidden" name="product_id" value="{{ p.id }}">
+                        <button type="submit" class="action-icon-btn" title="Add to Cart" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                            <i class="fa-solid fa-cart-plus"></i>
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Customer & Partner Support Helpdesk{% endblock %}
+{% block page_subtitle %}Manage escalated user support tickets, order inquiries, and resolution status{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-headset" style="color: var(--primary);"></i> Support Tickets ({{ tickets|length }})
+        </h3>
+    </div>
+
+    <nav aria-label="Filter support tickets" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;">
+        <a href="/admin-panel/tickets/" class="btn btn-{% if ticket_type == 'all' %}primary{% else %}secondary{% endif %} btn-sm">All</a>
+        <a href="/admin-panel/tickets/?type=customer" class="btn btn-{% if ticket_type == 'customer' %}primary{% else %}secondary{% endif %} btn-sm">Customers</a>
+        <a href="/admin-panel/tickets/?type=seller" class="btn btn-{% if ticket_type == 'seller' %}primary{% else %}secondary{% endif %} btn-sm">Sellers</a>
+        <a href="/admin-panel/tickets/?type=rider" class="btn btn-{% if ticket_type == 'rider' %}primary{% else %}secondary{% endif %} btn-sm">Riders</a>
+    </nav>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Ticket #</th>
+                    <th>Requester</th>
+                    <th>Subject</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tickets %}
+                <tr>
+                    <td>
+                        <strong style="font-family: monospace; color: var(--primary);">#{{ t.ticket_id }}</strong>
+                    </td>
+                    <td>
+                        <span>{{ t.user.get_full_name|default:t.user.username }}</span>
+                        <small style="color: var(--text-muted); display: block;">({{ t.user.get_role_display }})</small>
+                    </td>
+                    <td>
+                        <button type="button" aria-haspopup="dialog" aria-controls="ticketDetails{{ t.id }}" onclick="document.getElementById('ticketDetails{{ t.id }}').showModal()" style="padding: 0; border: 0; background: none; color: var(--primary); text-align: left; cursor: pointer;">
+                            <strong>{{ t.subject|truncatechars:55 }}</strong>
+                            <small style="display: block; margin-top: 4px; color: var(--text-muted);">View full details</small>
+                        </button>
+                    </td>
+                    <td>
+                        <span class="badge badge-info">{{ t.category }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if t.priority == 'urgent' %}danger{% elif t.priority == 'high' %}warning{% else %}secondary{% endif %}">
+                            {{ t.get_priority_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ t.created_at|date:"d M Y" }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if t.status == 'resolved' %}success{% elif t.status == 'open' %}warning{% else %}info{% endif %}">
+                            {{ t.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="POST" style="display: flex; gap: 6px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="ticket_id" value="{{ t.id }}">
+                            <input type="hidden" name="ticket_type" value="{{ ticket_type }}">
+                            {% if t.status != 'resolved' %}
+                            <button type="submit" name="status" value="resolved" class="btn btn-secondary btn-sm" style="color: #10b981;" title="Mark Resolved">
+                                <i class="fa-solid fa-circle-check"></i> Close
+                            </button>
+                            {% else %}
+                            <button type="submit" name="status" value="open" class="btn btn-secondary btn-sm" style="color: #f59e0b;" title="Reopen Ticket">
+                                <i class="fa-solid fa-rotate-left"></i> Reopen
+                            </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;">No support tickets logged.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% for t in tickets %}
+    <dialog id="ticketDetails{{ t.id }}" aria-labelledby="ticketTitle{{ t.id }}" onclick="if (event.target === this) this.close()" style="position: fixed; z-index: 3000; width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-md);">
+        <div style="display: grid; gap: 18px; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                <div style="min-width: 0;">
+                    <small style="color: var(--primary); font-family: monospace;">#{{ t.ticket_id }}</small>
+                    <h3 id="ticketTitle{{ t.id }}" style="margin: 6px 0 0; overflow-wrap: anywhere;">{{ t.subject }}</h3>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" aria-label="Close ticket details" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; padding: 14px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px;">
+                <div><small style="color: var(--text-muted);">Requester</small><strong style="display: block; overflow-wrap: anywhere;">{{ t.user.get_full_name|default:t.user.username }}</strong></div>
+                <div><small style="color: var(--text-muted);">Email</small><strong style="display: block; overflow-wrap: anywhere;">{{ t.user.email|default:"Not provided" }}</strong></div>
+                <div><small style="color: var(--text-muted);">Role</small><strong style="display: block;">{{ t.user.get_role_display }}</strong></div>
+                <div><small style="color: var(--text-muted);">Category</small><strong style="display: block;">{{ t.category }}</strong></div>
+                <div><small style="color: var(--text-muted);">Priority</small><strong style="display: block;">{{ t.get_priority_display }}</strong></div>
+                <div><small style="color: var(--text-muted);">Status</small><strong style="display: block;">{{ t.get_status_display }}</strong></div>
+                <div><small style="color: var(--text-muted);">Created</small><strong style="display: block;">{{ t.created_at|date:"d M Y, h:i A" }}</strong></div>
+                <div><small style="color: var(--text-muted);">Last Updated</small><strong style="display: block;">{{ t.updated_at|date:"d M Y, h:i A" }}</strong></div>
+            </div>
+
+            <section>
+                <h4 style="margin: 0 0 8px;">Message</h4>
+                <div style="padding: 14px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;">{{ t.message }}</div>
+            </section>
+
+            {% if t.admin_reply %}
+            <section>
+                <h4 style="margin: 0 0 8px;">Admin Reply</h4>
+                <div style="padding: 14px; background: var(--bg-app); border-left: 3px solid var(--primary); border-radius: 6px; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;">{{ t.admin_reply }}</div>
+            </section>
+            {% endif %}
+        </div>
+    </dialog>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Partner Documents & KYC{% endblock %}
+{% block page_subtitle %}Verified government credentials, driving license, and vehicle registration{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-file-shield" style="color: var(--primary);"></i> KYC Verification Status
+        </h3>
+        <span class="badge badge-success" style="padding: 6px 14px; font-weight: 700; border-radius: 20px;">
+            <i class="fa-solid fa-circle-check"></i> Admin Approved
+        </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                    <h4 style="margin: 0; color: var(--text-primary);">Driving License</h4>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">DL-042021008765</span>
+                </div>
+                <span class="badge badge-success">Verified</span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Valid thru: 14-Aug-2035 • Transport Class: LMV/MCWG</p>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                    <h4 style="margin: 0; color: var(--text-primary);">Aadhaar / National ID</h4>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">•••• •••• 5698</span>
+                </div>
+                <span class="badge badge-success">Verified</span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Biometric e-KYC linked to mobile</p>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                    <h4 style="margin: 0; color: var(--text-primary);">Vehicle RC (Registration)</h4>
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ rider.vehicle_number|default:"DL-01-AB-1234" }}</span>
+                </div>
+                <span class="badge badge-success">Active</span>
+            </div>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Type: {{ rider.get_vehicle_type_display|default:"Two Wheeler (Motorcycle)" }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

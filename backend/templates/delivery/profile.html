@@ -1,0 +1,63 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery Partner Profile{% endblock %}
+{% block page_subtitle %}Manage your personal details, emergency contact, and vehicle assignment{% endblock %}
+
+{% block panel_content %}
+<div style="width: 100%; max-width: 900px; margin: 24px auto 40px;">
+    <div class="glass-card" style="padding: 28px;">
+        <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+            <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;">
+                {{ rider.user.first_name|default:rider.user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <h3 style="margin: 0; color: var(--text-primary);">{{ rider.user.get_full_name|default:rider.user.username }}</h3>
+                <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                    User ID: <strong>{{ rider.user.username }}</strong> • Vehicle: <strong>{{ rider.vehicle_number|default:"DL-01-AB-1234" }}</strong>
+                </p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
+            <div><small>Account Email</small><strong style="display: block; overflow-wrap: anywhere;">{{ rider.user.email|default:'Not provided' }}</strong></div>
+            <div><small>Phone</small><strong style="display: block;">{{ rider.user.phone|default:'Not provided' }}</strong></div>
+            <div><small>Vehicle Type</small><strong style="display: block;">{{ rider.get_vehicle_type_display }}</strong></div>
+            <div><small>Driving Licence</small><strong style="display: block;">{{ rider.driving_license_no|default:'Not provided' }}</strong></div>
+            <div><small>Address</small><strong style="display: block; overflow-wrap: anywhere;">{{ rider.address|default:'Not provided' }}</strong></div>
+            <div><small>City / State / PIN</small><strong style="display: block;">{{ rider.city|default:'-' }}, {{ rider.state|default:'-' }} {{ rider.pincode }}</strong></div>
+            <div><small>Average Rating</small><strong style="display: block;">{{ rider.rating }} / 5</strong></div>
+            <div><small>Account Status</small><strong style="display: block;">{% if rider.is_approved %}Approved{% else %}Pending approval{% endif %}</strong></div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px;">
+            <button type="button" class="btn btn-primary" data-profile-panel-toggle="deliveryProfileEditPanel" aria-expanded="false"><i class="fa-solid fa-pen"></i> Edit Profile</button>
+            <button type="button" class="btn btn-secondary" data-profile-panel-toggle="deliveryPasswordPanel" aria-expanded="false"><i class="fa-solid fa-key"></i> Reset Password</button>
+        </div>
+
+    </div>
+
+    <div id="deliveryProfileEditPanel" style="display: {% if profile_edit_open %}block{% else %}none{% endif %};" class="glass-card profile-edit-panel">
+        <form method="POST" action="{% url 'delivery:profile' %}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
+            {% csrf_token %}<input type="hidden" name="action" value="save_profile">
+            <label>First Name<input class="form-control" name="first_name" value="{{ rider.user.first_name }}"></label>
+            <label>Last Name<input class="form-control" name="last_name" value="{{ rider.user.last_name }}"></label>
+            <label>Phone<input class="form-control" type="tel" name="phone" value="{{ rider.user.phone }}"></label>
+            <label>Vehicle Type<select class="form-control" name="vehicle_type">
+                {% for value, label in vehicle_type_choices %}<option value="{{ value }}" {% if rider.vehicle_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select></label>
+            <label>Vehicle Number<input class="form-control" name="vehicle_number" value="{{ rider.vehicle_number }}"></label>
+            <label>PIN Code<input class="form-control" name="pincode" value="{{ rider.pincode }}"></label>
+            <label>City<input class="form-control" name="city" value="{{ rider.city }}"></label>
+            <label>State<input class="form-control" name="state" value="{{ rider.state }}"></label>
+            <label style="grid-column: 1 / -1;">Address<textarea class="form-control" name="address" rows="3">{{ rider.address }}</textarea></label>
+            <div style="display: flex; gap: 8px; align-items: center; grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+                <a href="{% url 'delivery:profile' %}" class="btn btn-secondary" style="text-decoration: none;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="deliveryPasswordPanel" style="display: {% if profile_password_open %}block{% else %}none{% endif %}; width: 100%; max-width: 750px; margin: 24px auto 40px;">{% include "base/change-password.html" %}</div>
+<script src="{% static 'js/profile-panels.js' %}" defer></script>
+{% endblock %}

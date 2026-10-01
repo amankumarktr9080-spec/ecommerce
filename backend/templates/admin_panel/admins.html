@@ -1,0 +1,44 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}System Administrators & Access Controls{% endblock %}
+{% block page_subtitle %}Platform superusers, security roles, and operational staff{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> Superuser & Admin Accounts ({{ admins|length }})
+    </h3>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Admin Name</th>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>Superuser Status</th>
+                    <th>Last Login</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in admins %}
+                <tr>
+                    <td><strong>{{ a.get_full_name|default:a.username }}</strong></td>
+                    <td><span style="font-family: monospace; color: var(--primary);">@{{ a.username }}</span></td>
+                    <td>{{ a.email }}</td>
+                    <td>
+                        <span class="badge badge-{% if a.is_superuser %}success{% else %}info{% endif %}">
+                            {% if a.is_superuser %}Full Superuser{% else %}Staff Admin{% endif %}
+                        </span>
+                    </td>
+                    <td><span style="font-size: 0.85rem; color: var(--text-secondary);">{{ a.last_login|date:"d M Y, h:i A"|default:"Recently" }}</span></td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

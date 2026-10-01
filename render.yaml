@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: shopverse
+    runtime: python
+    rootDir: backend
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    preDeployCommand: python manage.py migrate
+    startCommand: gunicorn ecommerce.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /
+    disk:
+      name: shopverse-media
+      mountPath: /var/data
+      sizeGB: 5
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: SQLITE_PATH
+        value: /var/data/db.sqlite3
+      - key: MEDIA_ROOT
+        value: /var/data/media
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "true"
+      - key: DEFAULT_FROM_EMAIL
+        sync: false

@@ -1,0 +1,226 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Returns & Replacements Center{% endblock %}
+{% block page_subtitle %}Hassle-free return and replacement policy with instant wallet refund{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; margin-bottom: 40px; align-items: start;">
+    
+    <!-- Left: Existing Return Requests -->
+    <div class="glass-card" style="padding: 24px; height: min(72vh, 760px); min-height: 440px; overflow: hidden; display: flex; flex-direction: column;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 18px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Return & Replacement Requests
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; overflow-y: auto; min-height: 0; padding-right: 6px;">
+            {% for r in returns %}
+            <div id="return-request-{{ r.id }}" style="padding: 16px; flex: 0 0 auto; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span class="role-badge {% if r.status == 'refund_processed' or r.status == 'replacement_dispatched' %}delivery{% elif r.status == 'approved' %}customer{% else %}admin{% endif %}">
+                            {{ r.get_status_display }}
+                        </span>
+                        <small style="color: var(--text-muted);">{{ r.created_at|date:"d M Y" }}</small>
+                    </div>
+
+                    <h4 style="font-size: 0.95rem; margin: 0 0 4px; color: var(--text-primary);">
+                        Order #{{ r.order.order_number }} • <strong>{{ r.get_request_type_display }}</strong>
+                    </h4>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0 0 8px;">
+                        Reason: <strong>{{ r.get_reason_display }}</strong>
+                    </p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+                        Details: {{ r.details|default:"Verified claim" }}
+                    </p>
+                    {% if r.order_item %}
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0 0;">
+                            Item: {{ r.order_item.product.title }} &middot; Quantity: {{ r.quantity }}
+                        </p>
+                    {% endif %}
+                    {% if r.refund_amount %}
+                        <p style="font-size: 0.8rem; color: #10b981; margin: 6px 0 0;">Wallet refund: ₹{{ r.refund_amount }}</p>
+                    {% endif %}
+                    {% if r.pickup_tracking_id %}
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0 0;">Pickup reference: {{ r.pickup_tracking_id }}</p>
+                    {% endif %}
+                    {% if r.replacement_order %}
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0 0;">Replacement tracking: {{ r.replacement_order.tracking_id }}</p>
+                    {% endif %}
+                    {% if r.pickup_earning %}
+                        <p style="font-size: 0.8rem; color: #10b981; margin: 6px 0 0;">Return pickup assigned to delivery partner · ₹{{ r.pickup_earning }}</p>
+                    {% endif %}
+                    {% if r.duplicate_request_count > 1 %}
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 6px 0 0;">Showing latest of {{ r.duplicate_request_count }} older request records for this product.</p>
+                    {% endif %}
+
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <a href="/customer/orders/{{ r.order_id }}/track/#return-request-{{ r.id }}" class="btn btn-secondary btn-sm" style="text-decoration: none;"><i class="fa-solid fa-location-dot"></i> Track</a>
+                        {% if r.status == 'pending' or r.status == 'approved' or r.status == 'pickup_scheduled' %}
+                            <form method="POST" action="/customer/returns/">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel_return">
+                                <input type="hidden" name="return_id" value="{{ r.id }}">
+                                <button type="submit" class="btn btn-secondary btn-sm"><i class="fa-solid fa-xmark"></i> Cancel Request</button>
+                            </form>
+                        {% elif r.status == 'cancelled' %}
+                            <button type="button" class="btn btn-secondary btn-sm" disabled><i class="fa-solid fa-ban"></i> Cancelled</button>
+                        {% else %}
+                            <button type="button" class="btn btn-secondary btn-sm" disabled title="Refund/replacement is already processed; this request cannot be cancelled."><i class="fa-solid fa-lock"></i> Cancel Request</button>
+                        {% endif %}
+                    </div>
+
+                    {% if r.photo_url %}
+                        <div style="margin-top: 10px;">
+                            <img src="{{ r.photo_url }}" alt="Defect Proof" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                        </div>
+                    {% endif %}
+
+                    {% if r.seller_remarks %}
+                        <div style="margin-top: 10px; padding: 8px 12px; background: var(--bg-app); border-left: 3px solid var(--primary); border-radius: 6px; font-size: 0.78rem;">
+                            <strong>Seller Note:</strong> {{ r.seller_remarks }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p style="text-align: center; color: var(--text-muted); padding: 30px;">No return requests made.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right: Submit New Return / Replacement Form -->
+    <div class="glass-card" style="padding: 24px; height: min(72vh, 760px); min-height: 440px; overflow: hidden; display: flex; flex-direction: column;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">
+            <i class="fa-solid fa-circle-plus" style="color: #10b981;"></i> Request Return or Replacement
+        </h3>
+
+        {% if has_returnable_items %}
+        <form method="POST" action="/customer/returns/" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; min-height: 0; padding-right: 6px;">
+            {% csrf_token %}
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Select Delivered Order</label>
+                <select name="order_number" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                    {% for ord in delivered_orders %}
+                        <optgroup label="#{{ ord.order_number }}">
+                        {% for item in ord.items.all %}
+                        <option value="{{ ord.order_number }}" data-item-id="{{ item.id }}" data-max-quantity="{{ item.quantity }}" {% if item.has_return_request %}disabled{% endif %}>{{ item.product.title }} (x{{ item.quantity }}){% if item.has_return_request %} - Request exists{% endif %}</option>
+                        {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <input type="hidden" name="order_item_id" id="returnOrderItemId" required>
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Quantity</label>
+                <input type="number" name="quantity" id="returnQuantity" min="1" value="1" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Resolution Type</label>
+                <select name="request_type" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                    <option value="return">Return Product & Get Refund in E-Wallet</option>
+                    <option value="replace">Free Replacement (Same Product / Size Exchange)</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Reason for Return</label>
+                <select name="reason" required style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                    <option value="defective">Defective / Not Working</option>
+                    <option value="damaged">Damaged in Transit</option>
+                    <option value="wrong_item">Received Wrong Item</option>
+                    <option value="not_as_described">Product Not as Described</option>
+                    <option value="size_issue">Size / Fit Issue</option>
+                    <option value="other">Other Reason</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Comments / Fault Description</label>
+                <textarea name="details" rows="3" required placeholder="Explain the defect or reason in detail..."
+                          style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;"></textarea>
+            </div>
+
+            <!-- Device Gallery Photo Proof Picker Component -->
+            <div style="padding: 16px; background: var(--bg-app); border: 2px dashed var(--border-color); border-radius: 12px; text-align: center;">
+                <label for="returnProofFile" class="btn btn-secondary" style="margin: 0 auto 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
+                    <i class="fa-solid fa-folder-open" style="color: #ef4444; font-size: 1.1rem;"></i> Choose Proof Photo from Device Gallery
+                </label>
+                <span id="returnFileStatus" style="display: block; font-size: 0.8rem; color: var(--text-muted);">No proof image selected yet</span>
+                <input type="file" id="returnProofFile" name="proof_photo" accept="image/*" onchange="previewReturnProof(this)" style="display: none;">
+                <div id="returnProofPreviewGrid" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px;"></div>
+            </div>
+
+            <button type="submit" style="padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; margin-top: 4px;">
+                <i class="fa-solid fa-paper-plane"></i> Submit Request to Vendor
+            </button>
+        </form>
+        {% else %}
+        <div style="padding: 16px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); font-size: 0.88rem;">
+            All delivered products already have a return or replacement request. Cancel an open request from the list before submitting it again. Completed refunds cannot be cancelled.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+function previewReturnProof(input) {
+    const grid = document.getElementById('returnProofPreviewGrid');
+    const statusText = document.getElementById('returnFileStatus');
+    grid.innerHTML = '';
+    
+    if (input.files && input.files.length > 0) {
+        statusText.textContent = `✓ ${input.files.length} Defect Proof Photo(s) Selected from Device Gallery`;
+        statusText.style.color = '#10b981';
+        statusText.style.fontWeight = '700';
+
+        Array.from(input.files).forEach((file, idx) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'position: relative; width: 80px; height: 80px; border-radius: 10px; overflow: hidden; border: 2px solid #ef4444; box-shadow: var(--shadow-sm);';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+                
+                wrapper.appendChild(img);
+                grid.appendChild(wrapper);
+
+            };
+            reader.readAsDataURL(file);
+        });
+    } else {
+        statusText.textContent = 'No proof image selected yet';
+        statusText.style.color = 'var(--text-muted)';
+        statusText.style.fontWeight = 'normal';
+    }
+}
+
+const returnOrderSelect = document.querySelector('select[name="order_number"]');
+const returnItemId = document.getElementById('returnOrderItemId');
+const returnQuantity = document.getElementById('returnQuantity');
+function syncReturnItem() {
+    let option = returnOrderSelect.options[returnOrderSelect.selectedIndex];
+    if (option.disabled) {
+        const availableIndex = Array.from(returnOrderSelect.options).findIndex(candidate => !candidate.disabled);
+        if (availableIndex < 0) {
+            returnItemId.value = '';
+            returnQuantity.max = 1;
+            return;
+        }
+        returnOrderSelect.selectedIndex = availableIndex;
+        option = returnOrderSelect.options[availableIndex];
+    }
+    returnItemId.value = option.dataset.itemId || '';
+    returnQuantity.max = option.dataset.maxQuantity || 1;
+    if (Number(returnQuantity.value) > Number(returnQuantity.max)) returnQuantity.value = returnQuantity.max;
+}
+if (returnOrderSelect) {
+    returnOrderSelect.addEventListener('change', syncReturnItem);
+    syncReturnItem();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base/base.html" %}
+
+{% block title %}Contact Us - E-Commerce{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+
+    <h1>Contact Us</h1>
+
+    <p>
+        We are here to help you.
+    </p>
+
+</section>
+
+
+<section class="contact-section">
+
+    <div class="contact-info">
+
+        <h2>Get in Touch</h2>
+
+        <div class="contact-item">
+
+            <i class="fa-solid fa-envelope"></i>
+
+            <div>
+                <h3>Email</h3>
+                <p>support@example.com</p>
+            </div>
+
+        </div>
+
+
+        <div class="contact-item">
+
+            <i class="fa-solid fa-phone"></i>
+
+            <div>
+                <h3>Phone</h3>
+                <p>+91 XXXXX XXXXX</p>
+            </div>
+
+        </div>
+
+
+        <div class="contact-item">
+
+            <i class="fa-solid fa-location-dot"></i>
+
+            <div>
+                <h3>Address</h3>
+                <p>India</p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="contact-form">
+
+        <h2>Send Message</h2>
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <input
+                type="text"
+                name="name"
+                placeholder="Your Name"
+                required
+            >
+
+            <input
+                type="email"
+                name="email"
+                placeholder="Your Email"
+                required
+            >
+
+            <input
+                type="text"
+                name="subject"
+                placeholder="Subject"
+                required
+            >
+
+            <textarea
+                name="message"
+                rows="6"
+                placeholder="Your Message"
+                required
+            ></textarea>
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                Send Message
+
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+{% endblock %}

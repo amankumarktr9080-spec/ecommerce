@@ -1,0 +1,70 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Next-Generation 4-Panel E-Commerce Platform">
+
+    <title>{% block title %}ShopVerse{% endblock %}</title>
+
+    <link rel="icon" href="{% static 'images/favicon.png' %}">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=20260929-3">
+    <link rel="stylesheet" href="{% static 'css/modern_ecommerce.css' %}?v=20260929-7">
+    <link rel="stylesheet" href="{% static 'css/brand-theme.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body data-role="public">
+    <script>
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
+        window.addEventListener('pageshow', function () { window.scrollTo(0, 0); });
+    </script>
+    {% include "base/navbar.html" %}
+
+    {% if messages %}
+    <div style="max-width: 1400px; margin: 16px auto 0; padding: 0 24px;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}" style="padding: 12px 18px; border-radius: 10px; margin-bottom: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); color: var(--text-primary); display: flex; align-items: center; justify-content: space-between;">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main id="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% include "base/footer.html" %}
+
+    <!-- Global Framework JS -->
+    <script src="{% static 'js/modern_ecommerce.js' %}?v=10"></script>
+    {% block extra_js %}{% endblock %}
+    <script>
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const visible = input.type === 'text';
+        input.type = visible ? 'password' : 'text';
+        const icon = button.querySelector('i');
+        if (icon) icon.className = visible ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+    }
+    </script>
+</body>
+</html>

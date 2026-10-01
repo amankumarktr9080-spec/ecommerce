@@ -1,0 +1,46 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Settled Refunds Ledger{% endblock %}
+{% block page_subtitle %}Audit history of wallet reversals and gateway refunds processed to customers{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-arrow-rotate-left" style="color: #10b981;"></i> Processed Refunds ({{ refunds|length }})
+    </h3>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Claim #</th>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Refund Amount</th>
+                    <th>Destination</th>
+                    <th>Completed Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in refunds %}
+                <tr>
+                    <td>#{{ r.id }}</td>
+                    <td><strong style="color: var(--primary);">#{{ r.order.order_number }}</strong></td>
+                    <td>{{ r.customer.get_full_name|default:r.customer.username }}</td>
+                    <td><strong style="color: #10b981; font-size: 1rem;">₹{{ r.refund_amount }}</strong></td>
+                    <td><span class="badge badge-success"><i class="fa-solid fa-wallet"></i> Customer Wallet</span></td>
+                    <td><span style="font-size: 0.85rem; color: var(--text-secondary);">{{ r.updated_at|date:"d M Y, h:i A" }}</span></td>
+                    <td><span class="badge badge-success">Refunded</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">No completed refunds recorded.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}{{ product.title }}{% endblock %}
+{% block page_subtitle %}Unique Item Code: {{ product.item_code }} • 10% Platform Commission breakdown{% endblock %}
+
+{% block panel_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <a href="/admin-panel/products/" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Products
+    </a>
+    <div style="display: flex; gap: 8px;">
+        <a href="/admin-panel/products/{{ product.id }}/toggle-status/" class="btn btn-{% if product.is_active %}secondary{% else %}primary{% endif %}">
+            {% if product.is_active %}
+            <i class="fa-solid fa-eye-slash" style="color: #ef4444;"></i> Hide from Catalog
+            {% else %}
+            <i class="fa-solid fa-eye" style="color: #10b981;"></i> Make Live
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    <div class="glass-card" style="padding: 24px; text-align: center;">
+        {% if product.main_image_url %}
+        <img src="{{ product.main_image_url }}" alt="{{ product.title }}" data-image-viewer style="width: 100%; max-height: 320px; object-fit: contain; border-radius: 12px; margin-bottom: 16px; cursor: zoom-in;">
+        {% endif %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; margin-bottom: 16px;">
+            {% for image in product.gallery_images.all %}
+                {% if image.image_url != product.main_image_url %}
+                <button type="button" data-image-viewer data-image-src="{{ image.image_url }}" data-image-alt="{{ image.alt_text|default:product.title }}" title="Open image" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 6px; background: transparent; cursor: zoom-in;">
+                    <img src="{{ image.image_url }}" alt="{{ image.alt_text|default:product.title }}" style="display: block; width: 100%; aspect-ratio: 1; object-fit: cover;">
+                </button>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: var(--primary); font-family: monospace; font-size: 1.05rem; font-weight: 800; padding: 6px 14px;">
+            {{ product.item_code }}
+        </span>
+    </div>
+
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; color: var(--text-primary);">{{ product.title }}</h3>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+            {{ product.description }}
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.9rem; margin-bottom: 20px;">
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Vendor / Seller Store</span>
+                <strong style="color: var(--text-primary);">{{ product.seller.store_name }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Category</span>
+                <strong style="color: var(--text-primary);">{{ product.category.name }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Subcategory</span>
+                <strong style="color: var(--text-primary);">{{ product.subcategory.name|default:'—' }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Brand</span>
+                <strong style="color: var(--text-primary);">{{ product.brand.name|default:'—' }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Base Price (Seller Net)</span>
+                <strong style="color: var(--text-primary);">₹{{ product.base_price }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: rgba(16, 185, 129, 0.1);">
+                <span style="color: #10b981; display: block;">{{ product.admin_commission_percentage }}% Admin Platform Cut</span>
+                <strong style="color: #10b981;">+ ₹{{ product.admin_commission_amount }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Delivery Charge</span>
+                <strong style="color: var(--text-primary);">₹{{ product.delivery_charge }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Tax ({{ product.tax_percentage }}%)</span>
+                <strong style="color: var(--text-primary);">₹{{ product.admin_tax_amount }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: rgba(59, 130, 246, 0.1);">
+                <span style="color: var(--primary); display: block;">Final Selling Price</span>
+                <strong style="color: var(--primary); font-size: 1.1rem;">₹{{ product.selling_price }}</strong>
+            </div>
+            <div style="padding: 12px; border-radius: 8px; background: var(--bg-hover);">
+                <span style="color: var(--text-secondary); display: block;">Inventory Stock</span>
+                <strong style="color: var(--text-primary);">{{ product.stock }} units</strong>
+            </div>
+        </div>
+
+        <div>
+            <h4 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 1rem;">Return & Replacement Policy</h4>
+            {% if product.is_returnable %}
+            <p style="margin: 0; color: #10b981; font-weight: 600;">
+                <i class="fa-solid fa-circle-check"></i> Eligible for Return & Replacement within {{ product.return_window_days }} days of doorstep delivery.
+            </p>
+            {% else %}
+            <p style="margin: 0; color: var(--text-muted);">
+                <i class="fa-solid fa-circle-xmark"></i> Non-returnable item.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

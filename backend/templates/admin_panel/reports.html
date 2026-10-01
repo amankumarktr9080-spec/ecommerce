@@ -1,0 +1,120 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Operational Financial Reports & Visual Analytics{% endblock %}
+{% block page_subtitle %}Audit summaries for GST filing, 10% platform cuts, vendor payouts, and visual sales velocity{% endblock %}
+
+{% block panel_content %}
+<div class="kpi-grid" style="margin-bottom: 28px;">
+    <div class="kpi-card success"><div class="kpi-icon-wrap success"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="kpi-meta"><span>Total GMV</span><h3>₹{{ revenue|floatformat:2 }}</h3><span class="kpi-trend up">Live order total</span></div></div>
+    <div class="kpi-card info"><div class="kpi-icon-wrap primary"><i class="fa-solid fa-cart-flatbed"></i></div><div class="kpi-meta"><span>Total Orders</span><h3>{{ total_orders }}</h3><span class="kpi-trend up">{{ delivered_orders }} delivered</span></div></div>
+    <div class="kpi-card warning"><div class="kpi-icon-wrap warning"><i class="fa-solid fa-percent"></i></div><div class="kpi-meta"><span>Platform Commission</span><h3>₹{{ commission|floatformat:2 }}</h3><span class="kpi-trend up">Live commission ledger</span></div></div>
+</div>
+<!-- Chart.js Visualizations Grid -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
+    <!-- Revenue & Platform Commission Velocity -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Revenue & 10% Commission Velocity (₹)
+        </h3>
+        <div style="height: 260px;">
+            <canvas id="adminReportsRevenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Sales Distribution -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-pie" style="color: #10b981;"></i> Category GMV Share
+        </h3>
+        <div style="height: 260px;">
+            <canvas id="adminReportsCategoryDonut"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Downloadable Export Statements -->
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> Download Operational Statements
+    </h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-app); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 6px 0; color: var(--text-primary);">Monthly 10% Commission Audit</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: var(--text-secondary);">Itemized commission cuts across all vendor listings and completed deliveries.</p>
+            <a class="btn btn-primary btn-sm" href="/admin-panel/reports/export/commission/">
+                <i class="fa-solid fa-download"></i> Export CSV
+            </a>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-app); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 6px 0; color: var(--text-primary);">GST Tax & Invoicing Summary</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: var(--text-secondary);">State-wise GST collection and B2C / B2B sales invoices.</p>
+            <a class="btn btn-primary btn-sm" href="/admin-panel/reports/export/tax/">
+                <i class="fa-solid fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+
+        <div style="padding: 20px; border-radius: 12px; background: var(--bg-app); border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 6px 0; color: var(--text-primary);">Fleet Payout Settlement File</h4>
+            <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: var(--text-secondary);">Disbursement batch files for rider bank accounts and UPI IDs.</p>
+            <a class="btn btn-primary btn-sm" href="/admin-panel/reports/export/fleet/">
+                <i class="fa-solid fa-file-excel"></i> Export XLSX
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof Chart !== 'undefined') {
+        const revCtx = document.getElementById('adminReportsRevenueChart').getContext('2d');
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_status_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Gross GMV (₹)',
+                        data: {{ chart_revenue_values|safe }},
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: '10% Platform Commission (₹)',
+                        data: {{ chart_commission_values|safe }},
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        const donutCtx = document.getElementById('adminReportsCategoryDonut').getContext('2d');
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_category_labels|safe }},
+                datasets: [{
+                    data: {{ chart_category_values|safe }},
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

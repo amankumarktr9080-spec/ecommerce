@@ -1,0 +1,131 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Seller Earnings & Commission Ledger{% endblock %}
+{% block page_subtitle %}Review net profits, auto-deducted 10% platform fees, and bank payout requests{% endblock %}
+
+{% block panel_content %}
+<!-- Earnings Summary Cards -->
+<div class="kpi-grid" style="margin-bottom: 28px;">
+    <div class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Available for Payout</span>
+            <h3>₹{{ available_payout|floatformat:2 }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-circle-check"></i> After reserved payouts</span>
+        </div>
+    </div>
+
+    <div class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-percent"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Platform Commission (10%)</span>
+            <h3>₹{{ admin_commissions|floatformat:2 }}</h3>
+            <span class="kpi-trend down"><i class="fa-solid fa-receipt"></i> Retained by Admin</span>
+        </div>
+    </div>
+
+    <div class="kpi-card primary">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Gross Sales Volume</span>
+            <h3>₹{{ gross_sales|floatformat:2 }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-arrow-up"></i> Lifetime Sales</span>
+        </div>
+    </div>
+    <div class="kpi-card danger">
+        <div class="kpi-icon-wrap danger"><i class="fa-solid fa-truck-fast"></i></div>
+        <div class="kpi-meta">
+            <span>Awaiting Delivery</span>
+            <h3>₹{{ pending_earnings|floatformat:2 }}</h3>
+            <span class="kpi-trend down">Clears after delivery</span>
+        </div>
+    </div>
+</div>
+
+<!-- Bank & Payout Action Box -->
+<div class="glass-card" style="margin-bottom: 28px; padding: 22px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h4 style="margin: 0 0 4px; font-size: 1rem; color: var(--text-primary);">
+                Registered Payout Account: <strong>{{ seller.bank_name|default:"HDFC Bank" }}</strong> (A/C: {{ seller.account_number|default:"••••4567" }})
+            </h4>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">UPI ID: {{ seller.upi_id|default:"store@upi" }} • IFSC: {{ seller.ifsc_code|default:"HDFC0001234" }}</span>
+        </div>
+        <form method="POST" action="/seller/earnings/">
+            {% csrf_token %}
+            <button type="submit" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; padding: 12px 24px; font-size: 0.9rem;">
+                <i class="fa-solid fa-money-bill-transfer"></i> Request Payout Transfer
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.05rem; margin: 0 0 14px; color: var(--text-primary);">Payout Requests</h3>
+    {% for payout in payout_requests %}
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+            <span>₹{{ payout.amount }} • {{ payout.created_at|date:"d M Y, h:i A" }}</span>
+            <strong style="color: var(--primary);">{{ payout.get_status_display }}</strong>
+        </div>
+        {% if payout.status == 'paid' and payout.admin_note %}
+            <small style="display: block; margin: -6px 0 10px; color: var(--text-muted);">Transfer reference recorded: {{ payout.admin_note }}</small>
+        {% elif payout.status == 'paid' %}
+            <small style="display: block; margin: -6px 0 10px; color: #f59e0b;">Legacy Paid status; no transfer reference is recorded. Verify with Admin.</small>
+        {% endif %}
+    {% empty %}
+        <p style="margin: 0; color: var(--text-secondary);">No payout requests yet.</p>
+    {% endfor %}
+</div>
+
+<!-- Itemized Commission & Payout Audit Ledger -->
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">
+        Itemized Commission & Settlement Breakdown
+    </h3>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+                <tr style="background: var(--bg-app); text-align: left;">
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Order ID</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Date</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Order Total</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color); color: #ef4444;">Admin Fee (10%)</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color); color: #059669;">Net Seller Earning</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in commission_logs %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 12px 14px;"><strong>#{{ log.order.order_number }}</strong></td>
+                        <td style="padding: 12px 14px; color: var(--text-muted);">{{ log.created_at|date:"d M Y" }}</td>
+                        <td style="padding: 12px 14px;">₹{{ log.order_total }}</td>
+                        {% if log.status == 'cancelled' or log.status == 'refunded' %}
+                            <td style="padding: 12px 14px; color: var(--text-muted);">₹0.00 <small style="display: block;">Voided; original ₹{{ log.admin_commission_amount }}</small></td>
+                            <td style="padding: 12px 14px; color: var(--text-muted); font-weight: 800;">₹0.00</td>
+                        {% else %}
+                            <td style="padding: 12px 14px; color: #ef4444; font-weight: 600;">-₹{{ log.admin_commission_amount }}</td>
+                            <td style="padding: 12px 14px; color: #059669; font-weight: 800;">₹{{ log.seller_payout_amount }}</td>
+                        {% endif %}
+                        <td style="padding: 12px 14px;">
+                            <span class="role-badge delivery">{{ log.status|upper }}</span>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">No settled transactions yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Products Catalog{% endblock %}
+{% block page_subtitle %}Browse top brands, deals, and verified quality products{% endblock %}
+
+{% block panel_content %}
+<!-- Search & Filter Controls Bar -->
+<div class="glass-card customer-products-filter" style="margin-bottom: 24px; padding: 18px 24px;">
+    <form class="customer-products-filter-form" method="GET" action="/customer/products/" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div class="customer-products-filter-fields" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1;">
+            <!-- Category Dropdown -->
+            <select class="customer-filter-select" data-native-select="true" name="category" onchange="this.form.submit()" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); font-size: 0.85rem; outline: none;">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Brand Dropdown -->
+            <select class="customer-filter-select" data-native-select="true" name="brand" onchange="this.form.submit()" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); font-size: 0.85rem; outline: none;">
+                <option value="">All Brands</option>
+                {% for b in brands %}
+                    <option value="{{ b.id }}" {% if selected_brand == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Keyword Query -->
+            <div class="customer-products-search">
+                <input type="search" name="q" data-product-search value="{{ search_query }}" placeholder="Search title, SKU, or item code..." aria-label="Search products" autocomplete="off">
+                <button type="submit" class="customer-search-submit" title="Search products" aria-label="Search products">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <button type="submit" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none;">
+                <i class="fa-solid fa-filter"></i> Filter
+            </button>
+            {% if selected_category or selected_brand or search_query %}
+                <a href="/customer/products/" style="font-size: 0.82rem; color: #ef4444; font-weight: 600; text-decoration: none;">Clear Filters</a>
+            {% endif %}
+        </div>
+
+        <!-- Sorting -->
+        <div class="customer-products-sort" style="display: flex; align-items: center; gap: 10px;">
+            <label style="font-size: 0.82rem; color: var(--text-secondary); font-weight: 600;">Sort By:</label>
+            <select class="customer-filter-select" data-native-select="true" name="sort" onchange="this.form.submit()" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); font-size: 0.85rem; outline: none;">
+                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest Arrivals</option>
+                <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                <option value="rating" {% if selected_sort == 'rating' %}selected{% endif %}>Customer Rating</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Products by Category -->
+{% for row in category_product_rows %}
+<section class="customer-category-product-row" id="category-{{ row.slug }}">
+    <h2 class="customer-category-product-row-title">{{ row.name }}</h2>
+    <div class="customer-category-product-scroller">
+    {% for p in row.products %}
+        <div class="glass-card" style="padding: 18px; display: flex; flex-direction: column; justify-content: space-between; position: relative; cursor: pointer;" onclick="if (!event.target.closest('a, button, form')) window.location.href='/customer/product/{{ p.id }}/';">
+            
+            <!-- Badges Bar -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <span style="font-size: 0.72rem; font-weight: 800; background: var(--primary-light); color: var(--primary); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">
+                    {{ p.item_code }}
+                </span>
+                <span style="font-size: 0.75rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">
+                    ★ {{ p.average_rating }}
+                </span>
+            </div>
+
+            <!-- Product Image -->
+            <a href="/customer/product/{{ p.id }}/" style="display: block; height: 200px; background: #ffffff; border-radius: 12px; margin-bottom: 14px; overflow: hidden; padding: 0;">
+                <img src="{{ p.main_image_url }}" alt="{{ p.title }}" style="display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 0.25s;">
+            </a>
+
+            <!-- Content Info -->
+            <div>
+                <span style="font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">
+                    {{ p.brand.name|default:"ShopVerse Genuine" }}
+                </span>
+                <h3 style="font-size: 0.95rem; font-weight: 600; margin: 4px 0 8px; line-height: 1.4; height: 42px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                    <a href="/customer/product/{{ p.id }}/" style="color: var(--text-primary); text-decoration: none;">
+                        {{ p.title }}
+                    </a>
+                </h3>
+
+                <!-- Price Row -->
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
+                    <strong style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);">₹{{ p.selling_price }}</strong>
+                    {% if p.mrp > p.selling_price %}
+                        <small style="text-decoration: line-through; color: var(--text-muted);">₹{{ p.mrp }}</small>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #dc2626;">{{ p.discount_percentage }}% OFF</span>
+                    {% endif %}
+                </div>
+                {% if p.seller_offer %}
+                    <small style="display: block; color: #059669; font-weight: 700; margin: -4px 0 8px;">
+                        {{ p.seller_offer.title }}: Save ₹{{ p.seller_offer.savings_amount }}
+                    </small>
+                {% endif %}
+
+                <!-- Delivery & Return Tag -->
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 14px; display: flex; align-items: center; gap: 10px;">
+                    <span><i class="fa-solid fa-truck" style="color: #10b981;"></i> {% if p.delivery_charge == 0 %}Free Delivery{% else %}₹{{ p.delivery_charge }} Delivery{% endif %}</span>
+                    <span><i class="fa-solid fa-rotate-left" style="color: #6366f1;"></i> {{ p.return_window_days }} Days Return</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <form class="ajax-cart-form" method="POST" action="/customer/cart/" data-stock="{{ p.stock }}" data-quantity="{{ p.cart_quantity }}" style="flex: 1; min-width: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add" data-cart-action>
+                    <input type="hidden" name="product_id" value="{{ p.id }}">
+                    <button type="submit" data-cart-add {% if p.stock < 1 %}disabled{% endif %} style="width: 100%; padding: 10px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.82rem; cursor: pointer; display: {% if p.cart_quantity %}none{% else %}flex{% endif %}; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-cart-plus"></i> <span data-i18n="add_to_cart">Add to Cart</span>
+                    </button>
+                    <div class="catalog-cart-stepper" data-cart-stepper style="display: {% if p.cart_quantity %}flex{% else %}none{% endif %};">
+                        <button type="button" data-cart-decrement aria-label="Decrease {{ p.title }} quantity">−</button>
+                        <span class="catalog-cart-quantity" data-cart-quantity>{{ p.cart_quantity|default:0 }}</span>
+                        <button type="button" data-cart-increment aria-label="Increase {{ p.title }} quantity" {% if p.cart_quantity >= p.stock %}disabled{% endif %}>+</button>
+                    </div>
+                </form>
+
+                <form class="ajax-wishlist-form" method="POST" action="/customer/wishlist/">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle">
+                    <input type="hidden" name="product_id" value="{{ p.id }}">
+                    <button type="submit" class="action-icon-btn wishlist-btn {% if p.id in user_wishlist_ids %}active in-wishlist{% endif %}" title="{% if p.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}" aria-label="{% if p.id in user_wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}" style="width: 38px; height: 38px; border-radius: 8px; cursor: pointer;">
+                        <i class="{% if p.id in user_wishlist_ids %}fa-solid fa-heart{% else %}fa-regular fa-heart{% endif %}" style="{% if p.id in user_wishlist_ids %}color: #ef4444 !important;{% endif %}"></i>
+                    </button>
+                </form>
+
+                <form method="POST" action="/customer/compare/">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle">
+                    <input type="hidden" name="product_id" value="{{ p.id }}">
+                    <button type="submit" class="action-icon-btn compare-btn {% if p.id in compare_product_ids %}active{% endif %}" title="{% if p.id in compare_product_ids %}Remove from comparison{% else %}Add to comparison{% endif %}" style="width: 38px; height: 38px; border-radius: 8px; cursor: pointer;">
+                        <i class="fa-solid fa-code-compare"></i>
+                    </button>
+                </form>
+
+                <button type="button" class="action-icon-btn" title="Share product" aria-label="Share product" onclick="shareProductCard({{ p.id }}, '{{ p.title|escapejs }}')" style="width: 38px; height: 38px; border-radius: 8px; cursor: pointer;">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </button>
+            </div>
+
+        </div>
+    {% endfor %}
+    </div>
+</section>
+{% empty %}
+<div style="text-align: center; padding: 60px 20px;" class="glass-card">
+    <i class="fa-solid fa-magnifying-glass" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 12px;"></i>
+    <h3>No products found</h3>
+    <p style="color: var(--text-secondary);">Try clearing your search filters to see all available items.</p>
+    <a href="/customer/products/" class="action-pill-btn" style="display: inline-block; margin-top: 12px; background: var(--primary); color: #fff; border: none;">View All Products</a>
+</div>
+{% endfor %}
+<script src="{% static 'js/ajax-cart-stepper.js' %}?v=3" defer></script>
+<script src="{% static 'js/ajax-wishlist.js' %}?v=1" defer></script>
+<script>
+function shareProductCard(productId, title) {
+    const url = `${window.location.origin}/customer/product/${productId}/`;
+    const shareData = {title: title, text: `Check out ${title} on ShopVerse`, url: url};
+    if (navigator.share) {
+        navigator.share(shareData).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            if (typeof showToast === 'function') showToast('Product link copied!', 'info');
+        });
+    }
+}
+</script>
+{% endblock %}

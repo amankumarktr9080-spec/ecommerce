@@ -1,0 +1,114 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery Earnings & Payouts{% endblock %}
+{% block page_subtitle %}Track your per-order delivery payouts, milestone bonuses, and bank transfers{% endblock %}
+
+{% block panel_content %}
+<!-- KPI Stats Row -->
+<div class="kpi-grid">
+    <div class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Available Payout Wallet</span>
+            <h3>₹{{ wallet_balance }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-circle-check"></i> Ready for withdrawal</span>
+        </div>
+    </div>
+
+    <div class="kpi-card info">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-route"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Completed Orders Fee</span>
+            <h3>₹{{ total_earned }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-arrow-up"></i> Doorstep fulfillment</span>
+        </div>
+    </div>
+
+    <div class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-award"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Weekly Fuel & Peak Bonus</span>
+            <h3>₹{{ weekly_incentive }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-bolt"></i> On-time streak</span>
+        </div>
+    </div>
+</div>
+
+<!-- Payout & Bank Info Banner -->
+<div class="glass-card" style="padding: 24px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h4 style="margin: 0 0 6px 0; color: var(--text-primary);">
+                <i class="fa-solid fa-building-columns" style="color: var(--primary);"></i> Payout Account: 
+                <strong>{{ rider.bank_name|default:"HDFC Bank" }}</strong> (A/C: {{ rider.account_number|default:"•••• 8821" }})
+            </h4>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                UPI ID: <strong>{{ rider.upi_id|default:"rider@upi" }}</strong> • Payout Cycle: <strong>Instant / Every Tuesday</strong>
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/delivery/bank/" class="btn btn-secondary">
+                <i class="fa-solid fa-pen-to-square"></i> Update Bank Info
+            </a>
+            <button class="btn btn-primary" onclick="alert('Withdrawal request of ₹{{ wallet_balance }} initiated! Funds will credit to your account within 30 minutes.')">
+                <i class="fa-solid fa-paper-plane"></i> Withdraw to Bank
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Trip Breakdown Table -->
+<div class="glass-card" style="padding: 24px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary);">
+        <i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Delivery Earnings Ledger
+    </h3>
+
+    {% if orders or return_pickups %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Delivered Date</th>
+                    <th>Customer</th>
+                    <th>Base Delivery Fee</th>
+                    <th>Rider Earning</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td><strong style="color: var(--primary);">#{{ o.order_number }}</strong></td>
+                    <td>{{ o.created_at|date:"d M Y, h:i A" }}</td>
+                    <td>{{ o.customer.get_full_name|default:o.customer_name }}</td>
+                    <td>₹{{ o.shipping_cost|default:"50.00" }}</td>
+                    <td><strong style="color: #10b981; font-size: 1.05rem;">+ ₹{{ o.delivery_partner_earning }}</strong></td>
+                    <td><span class="badge badge-success">Credited to Wallet</span></td>
+                </tr>
+                {% endfor %}
+                {% for pickup in return_pickups %}
+                <tr>
+                    <td><strong style="color: var(--primary);">#{{ pickup.order.order_number }} · {{ pickup.pickup_tracking_id }}</strong></td>
+                    <td>{{ pickup.picked_up_at|date:"d M Y, h:i A" }}</td>
+                    <td>{{ pickup.customer.get_full_name|default:pickup.customer.username }}</td>
+                    <td>₹{{ pickup.pickup_earning }}</td>
+                    <td><strong style="color: #10b981; font-size: 1.05rem;">+ ₹{{ pickup.pickup_earning }}</strong></td>
+                    <td><span class="badge badge-success">Return pickup credited</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 40px 0;">No completed trips logged yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

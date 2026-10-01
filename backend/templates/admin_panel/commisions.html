@@ -1,0 +1,125 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}10% Platform Commission Revenue Ledger{% endblock %}
+{% block page_subtitle %}Settled commissions, active-order GMV, and seller payouts recorded with a transfer reference{% endblock %}
+
+{% block panel_content %}
+<!-- Commission KPI Row -->
+<div class="kpi-grid">
+    <div class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Settled Platform Commission</span>
+            <h3>₹{{ total_commission }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-arrow-up"></i> Delivered and paid orders</span>
+        </div>
+    </div>
+
+    <div class="kpi-card info">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Active Order GMV</span>
+            <h3>₹{{ total_order_volume }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-chart-line"></i> Item subtotal; excludes cancelled/returned</span>
+        </div>
+    </div>
+
+    <div class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-store"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Payouts Marked Paid with Reference</span>
+            <h3>₹{{ total_seller_net }}</h3>
+            <span class="kpi-trend neutral"><i class="fa-solid fa-hand-holding-dollar"></i> Admin-recorded; not bank-verified</span>
+        </div>
+    </div>
+</div>
+
+<!-- Explanatory Commission Engine Card -->
+<div class="glass-card" style="padding: 20px; margin-bottom: 24px; border-left: 6px solid #10b981;">
+    <h4 style="margin: 0 0 6px 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-calculator" style="color: #10b981;"></i> Automatic 10% Commission Engine Specification
+    </h4>
+    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+        Commission is settled only after an order is delivered and paid. Seller payouts are separate requests; this page records transfer references but does not execute or verify bank transfers.
+    </p>
+</div>
+
+<!-- Commission Logs Table -->
+<div class="glass-card" style="padding: 24px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Per-Order Commission Breakdown ({{ logs|length }})
+    </h3>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Log #</th>
+                    <th>Order #</th>
+                    <th>Seller Store</th>
+                    <th>Gross Order Amount</th>
+                    <th>10% Admin Platform Cut</th>
+                    <th>Seller Net Disbursed</th>
+                    <th>Recorded Timestamp</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in logs %}
+                <tr>
+                    <td>#{{ l.id }}</td>
+                    <td>
+                        <a href="/admin-panel/orders/{{ l.order.id }}/" style="font-weight: 700; color: var(--primary); text-decoration: none;">
+                            #{{ l.order.order_number }}
+                        </a>
+                    </td>
+                    <td>
+                        <strong>{{ l.order.seller.store_name }}</strong>
+                    </td>
+                    <td>₹{{ l.order_total }}</td>
+                    <td>
+                        {% if l.status == 'cancelled' or l.status == 'refunded' %}
+                        <span style="color: var(--text-muted);">₹0.00</span>
+                        <small style="color: var(--text-muted); display: block;">Voided; original ₹{{ l.admin_commission_amount }}</small>
+                        {% else %}
+                        <span style="color: #10b981; font-weight: 800; font-size: 1rem;">
+                            +₹{{ l.admin_commission_amount }}
+                        </span>
+                        <small style="color: var(--text-muted); display: block;">({{ l.rate_percentage }}%)</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if l.status == 'cancelled' or l.status == 'refunded' %}
+                        <span style="color: var(--text-muted);">₹0.00</span>
+                        {% else %}
+                        <span style="color: var(--primary); font-weight: 700;">
+                            ₹{{ l.seller_payout_amount }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ l.created_at|date:"d M Y, h:i A" }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if l.status == 'settled' %}success{% elif l.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                            {% if l.status == 'settled' %}Settled{% elif l.status == 'pending' %}Pending{% elif l.status == 'cancelled' %}Cancelled{% else %}Refunded{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;">No commission logs generated yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

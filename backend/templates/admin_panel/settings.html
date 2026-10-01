@@ -1,0 +1,61 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Platform Configuration & System Settings{% endblock %}
+{% block page_subtitle %}Manage global marketplace rules, 10% platform commission rates, taxes, and system policies{% endblock %}
+
+{% block panel_content %}
+<div style="width: 100%; max-width: 800px; margin: 24px auto 40px;">
+    <div class="glass-card" style="padding: 28px;">
+        <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Marketplace Economics & Commission Rules
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px;">
+            <div><small style="color: var(--text-secondary);">Default Platform Commission (%)</small><strong style="display: block; margin-top: 6px;">{{ marketplace_settings.platform_commission }}%</strong><small style="color: var(--text-muted);">Applied automatically when vendor lists a product</small></div>
+            <div><small style="color: var(--text-secondary);">Standard GST / Tax Rate (%)</small><strong style="display: block; margin-top: 6px;">{{ marketplace_settings.tax_rate }}%</strong><small style="color: var(--text-muted);">Calculated on base price during checkout</small></div>
+            <div><small style="color: var(--text-secondary);">Base Delivery Fee</small><strong style="display: block; margin-top: 6px;">₹{{ marketplace_settings.base_delivery_fee }}</strong><small style="color: var(--text-muted);">Disbursed 100% directly to delivery rider</small></div>
+            <div><small style="color: var(--text-secondary);">Maximum Return Window</small><strong style="display: block; margin-top: 6px;">{{ marketplace_settings.max_return_window }} days</strong><small style="color: var(--text-muted);">Standard window for customer return/replacement</small></div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 20px; display: flex; justify-content: flex-end;">
+            <button type="button" class="btn btn-primary" id="editSystemSettings" {% if settings_edit_open %}hidden{% endif %} onclick="const panel = document.getElementById('systemSettingsEditCard'); panel.style.display = 'block'; panel.scrollIntoView({behavior: 'smooth', block: 'start'}); this.hidden = true;">
+                <i class="fa-solid fa-pen"></i> Edit Settings
+            </button>
+        </div>
+    </div>
+
+    <div id="systemSettingsEditCard" class="glass-card" style="display: {% if settings_edit_open %}block{% else %}none{% endif %}; margin-top: 24px; padding: 28px;">
+        <h3 style="margin: 0 0 20px; font-size: 1.1rem; color: var(--text-primary);">Edit Marketplace Settings</h3>
+        <form method="POST" action="{% url 'admin_panel:settings' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Default Platform Commission (%)</label>
+                    <input type="number" name="platform_commission" step="0.01" min="0" max="100" class="form-control" value="{{ settings_form.platform_commission.value|default_if_none:'' }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-weight: 700;">
+                    {{ settings_form.platform_commission.errors }}
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Standard GST / Tax Rate (%)</label>
+                    <input type="number" name="tax_rate" step="0.01" min="0" max="100" class="form-control" value="{{ settings_form.tax_rate.value|default_if_none:'' }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                    {{ settings_form.tax_rate.errors }}
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Base Delivery Fee (₹)</label>
+                    <input type="number" name="base_delivery_fee" step="0.01" min="0" class="form-control" value="{{ settings_form.base_delivery_fee.value|default_if_none:'' }}" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                    {{ settings_form.base_delivery_fee.errors }}
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Maximum Return Window (Days)</label>
+                    <input type="number" name="max_return_window" min="0" max="365" class="form-control" value="{{ settings_form.max_return_window.value|default_if_none:'' }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                    {{ settings_form.max_return_window.errors }}
+                </div>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <a href="{% url 'admin_panel:settings' %}" class="btn btn-secondary" style="text-decoration: none;">Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save System Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base/base.html" %}
+
+{% block title %}Create Customer Account - ShopVerse{% endblock %}
+
+{% block content %}
+<section class="registration-page auth-form-page" style="min-height: 85vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 520px; padding: 36px; border-radius: 20px; box-shadow: var(--shadow-lg);">
+        
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="width: 60px; height: 60px; border-radius: 16px; background: var(--accent-gradient); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8rem; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 700; margin: 0; color: var(--text-primary);">Create Customer Account</h2>
+            <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 6px;">Create your ShopVerse customer account</p>
+        </div>
+
+        <!-- Note on Seller/Delivery onboarding -->
+        <div style="padding: 12px 16px; background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 8px; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 20px;">
+            <i class="fa-solid fa-circle-info" style="color: #f59e0b;"></i> 
+            <strong>Notice for Vendors & Riders:</strong> Seller and Delivery Partner accounts are provisioned exclusively by the platform Admin. Please <a href="/auth/login/" style="color: var(--primary); font-weight: 600;">Login here</a> with your issued credentials.
+        </div>
+
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="toast-msg {% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}" style="margin-bottom: 18px; animation: none;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>{{ msg }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="/auth/register/" style="display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">First Name</label>
+                    <input type="text" name="first_name" required placeholder="Aman"
+                           style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Last Name</label>
+                    <input type="text" name="last_name" required placeholder="Kumar"
+                           style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Username</label>
+                <input type="text" name="username" required placeholder="aman_shopper"
+                       style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Email Address</label>
+                <input type="email" name="email" required placeholder="aman@example.com"
+                       style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Phone Number</label>
+                <input type="tel" name="phone" required placeholder="9876543210"
+                       style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Referral Code (Optional)</label>
+                <input type="text" name="referral_code" placeholder="Enter friend's referral code"
+                       style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none; text-transform: uppercase;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Password</label>
+                    <input type="password" name="password" required placeholder="••••••••"
+                           style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Confirm Password</label>
+                    <input type="password" name="confirm_password" required placeholder="••••••••"
+                           style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                </div>
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; margin-top: 8px;">
+                Create Account
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 24px; font-size: 0.85rem; color: var(--text-secondary);">
+            Already have an account? <a href="/auth/login/" style="color: var(--primary); font-weight: 600;">Sign In</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

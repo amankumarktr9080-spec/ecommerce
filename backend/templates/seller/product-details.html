@@ -1,0 +1,72 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}{{ product.title }}{% endblock %}
+{% block page_subtitle %}Seller product listing details{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 32px;">
+    <div style="display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr); gap: 28px; align-items: start;">
+        <div style="display: grid; justify-items: center; align-content: start; gap: 12px; min-height: 300px; padding: 20px; border-radius: 10px; background: #fff;">
+            {% if product.main_image_url %}
+            <img src="{{ product.main_image_url }}" alt="{{ product.title }}" data-image-viewer style="max-width: 100%; max-height: 340px; object-fit: contain; cursor: zoom-in;">
+            {% endif %}
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%;">
+                {% for image in product.gallery_images.all %}
+                    {% if image.image_url != product.main_image_url %}
+                    <button type="button" data-image-viewer data-image-src="{{ image.image_url }}" data-image-alt="{{ image.alt_text|default:product.title }}" title="Open image" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff; cursor: zoom-in;">
+                        <img src="{{ image.image_url }}" alt="{{ image.alt_text|default:product.title }}" style="display: block; width: 100%; aspect-ratio: 1; object-fit: contain;">
+                    </button>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div>
+            <span style="font-size: 0.8rem; font-weight: 800; color: var(--primary);">{{ product.item_code }}</span>
+            <h2 style="margin: 8px 0 14px; color: var(--text-primary);">{{ product.title }}</h2>
+            <p style="color: var(--text-secondary); line-height: 1.6;">{{ product.description|default:"No product description has been added." }}</p>
+            <dl style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin: 22px 0;">
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Item code</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.item_code }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">SKU</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.sku }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Category</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.category.name|default:"General" }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Subcategory</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.subcategory.name|default:"-" }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Brand</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.brand.name|default:"-" }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Base earning</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">₹{{ product.base_price }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Platform fee</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.admin_commission_percentage }}%</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Delivery charge</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">₹{{ product.delivery_charge }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Tax rate</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.tax_percentage }}%</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Customer price</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">₹{{ product.selling_price }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">MRP</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">₹{{ product.mrp }}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Discount</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.discount_percentage }}%</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Stock</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.stock }} units</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Rating</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.average_rating }} ({{ product.total_reviews_count }} reviews)</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Listing status</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{% if product.is_active %}Active{% else %}Inactive{% endif %}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Featured</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{% if product.is_featured %}Yes{% else %}No{% endif %}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Flash sale</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{% if product.is_flash_sale %}Yes{% else %}No{% endif %}{% if product.flash_sale_end %} · Ends {{ product.flash_sale_end|date:"d M Y H:i" }}{% endif %}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Returns</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{% if product.is_returnable %}Yes · {{ product.return_window_days }} days{% else %}No{% endif %}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Replacement</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{% if product.is_replaceable %}Yes · {{ product.replacement_window_days }} days{% else %}No{% endif %}</dd></div>
+                <div><dt style="color: var(--text-muted); font-size: 0.8rem;">Listed on</dt><dd style="margin: 4px 0 0; color: var(--text-primary);">{{ product.created_at|date:"d M Y, H:i" }}</dd></div>
+            </dl>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/seller/products/{{ product.id }}/edit/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; text-decoration: none;"><i class="fa-solid fa-pen-to-square"></i> Edit Product</a>
+                <a href="/seller/products/" class="action-pill-btn" style="text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Back to Products</a>
+            </div>
+        </div>
+    </div>
+    {% with specifications=product.specifications.all %}
+        {% if specifications %}
+            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-color);">
+                <h3 style="margin: 0 0 12px; font-size: 1rem;">Product specifications</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                    {% for specification in specifications %}
+                        <div style="padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;">
+                            <small style="display: block; color: var(--text-muted);">{{ specification.group_name }} · {{ specification.name }}</small>
+                            <strong style="display: block; margin-top: 4px; color: var(--text-primary);">{{ specification.value }}</strong>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}

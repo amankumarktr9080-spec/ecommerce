@@ -1,0 +1,45 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Rewards & Referral Loyalty Points{% endblock %}
+{% block page_subtitle %}Earn 10 points per ₹100 spent and invite friends for ₹200 wallet credits{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+    <!-- Points Banner -->
+    <div class="glass-card" style="padding: 28px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%); border: 1px solid rgba(245, 158, 11, 0.4);">
+        <span style="font-size: 0.8rem; font-weight: 700; color: #d97706; text-transform: uppercase;">Available ShopVerse Loyalty Points</span>
+        <h2 style="font-size: 2.5rem; font-weight: 800; margin: 4px 0 10px; color: var(--text-primary);">{{ reward_points }} PTS</h2>
+        <p style="margin: 0 0 16px; color: var(--text-secondary); font-size: 0.88rem;">Your points are worth ₹{{ reward_value }} in rewards value.</p>
+        <button class="action-pill-btn" style="background: #d97706; color: #fff; border: none;" onclick="showToast('Redeemed 200 PTS for ₹100 Coupon!', 'success')">
+            <i class="fa-solid fa-gift"></i> Redeem Points for Coupon
+        </button>
+    </div>
+
+    <!-- Referral Code Banner -->
+    <div class="glass-card" style="padding: 28px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 8px; color: var(--text-primary);">Invite Friends & Earn ₹200</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0 0 16px;">Share your unique referral code with friends and family.</p>
+        
+        <div style="display: flex; gap: 10px; align-items: center; background: var(--bg-app); padding: 12px; border-radius: 10px; border: 1px dashed var(--primary);">
+            <code style="font-size: 1.1rem; font-weight: 800; color: var(--primary); flex: 1;">{{ referral_code|default:"REF-AMAN100" }}</code>
+            <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('{{ referral_code|escapejs }}'); showToast('Referral code copied!', 'info');">
+                <i class="fa-solid fa-copy"></i> Copy
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="shareReferral()" title="Share referral invite">
+                <i class="fa-solid fa-share-nodes"></i> Share
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+function shareReferral() {
+    const text = 'Join ShopVerse with my referral code {{ referral_code|escapejs }} and start shopping!';
+    if (navigator.share) {
+        navigator.share({title: 'ShopVerse Refer & Earn', text: text, url: window.location.origin});
+    } else {
+        navigator.clipboard.writeText(text).then(() => showToast('Referral invite copied!', 'info'));
+    }
+}
+</script>
+{% endblock %}

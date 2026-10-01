@@ -1,0 +1,97 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Customer Returns & Replacements Review{% endblock %}
+{% block page_subtitle %}Inspect customer return requests, approve wallet refunds or dispatch replacements{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--text-primary);">
+        Incoming Return & Replacement Claims ({{ returns.count }})
+    </h3>
+
+    <div style="display: flex; flex-direction: column; gap: 18px;">
+        {% for ret in returns %}
+            <div style="padding: 20px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="role-badge {% if ret.status == 'approved' or ret.status == 'refund_processed' %}delivery{% elif ret.status == 'rejected' %}admin{% else %}customer{% endif %}">
+                                {{ ret.get_status_display }}
+                            </span>
+                            <strong style="font-size: 1rem; color: var(--text-primary);">Order #{{ ret.order.order_number }}</strong>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">({{ ret.get_request_type_display }})</span>
+                        </div>
+                        <small style="color: var(--text-muted);">Submitted by {{ ret.customer.get_full_name|default:ret.customer.username }} on {{ ret.created_at|date:"d M Y, h:i A" }}</small>
+                    </div>
+                    <strong style="font-size: 1.15rem; color: var(--text-primary);">Claim Value: ₹{{ ret.order.grand_total }}</strong>
+                </div>
+
+                <div style="padding: 12px; background: var(--bg-app); border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem;">
+                    <div style="color: #ef4444; font-weight: 700; margin-bottom: 4px;">Reason: {{ ret.get_reason_display }}</div>
+                    <p style="margin: 0; color: var(--text-secondary);">Customer Note: {{ ret.details|default:"Defective item claimed by buyer." }}</p>
+                </div>
+
+                {% if ret.photo_url %}
+                    <div style="margin-bottom: 14px;">
+                        <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Customer Photo Proof:</span>
+                        <img src="{{ ret.photo_url }}" alt="Proof" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open(this.src, '_blank')">
+                    </div>
+                {% endif %}
+
+                <!-- Action Controls if Pending -->
+                {% if ret.status == 'pending' %}
+                    <form method="POST" action="/seller/returns/" style="display: flex; gap: 12px; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="return_id" value="{{ ret.id }}">
+                        <input type="text" name="remarks" placeholder="Optional remarks for customer..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                        
+                        <button type="submit" name="decision" value="approved" class="action-pill-btn" style="background: #10b981; color: #fff; border: none;">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button type="submit" name="decision" value="rejected" class="action-pill-btn" style="background: #ef4444; color: #fff; border: none;">
+                            <i class="fa-solid fa-xmark"></i> Reject
+                        </button>
+                    </form>
+                {% elif ret.status == 'approved' %}
+                    <form method="POST" action="/seller/returns/" style="display: flex; gap: 8px; padding-top: 10px;">
+                        {% csrf_token %}<input type="hidden" name="return_id" value="{{ ret.id }}">
+                        <select name="pickup_partner_id" class="form-control"><option value="">Choose rider</option>{% for partner in pickup_partners %}<option value="{{ partner.id }}">{{ partner.user.username }}</option>{% endfor %}</select>
+                        <input type="text" name="pickup_tracking_id" placeholder="Manual pickup reference (optional)" class="form-control">
+                        <button type="submit" name="decision" value="schedule_pickup" class="action-pill-btn">Schedule Manual Pickup</button>
+                    </form>
+                {% elif ret.status == 'pickup_scheduled' %}
+                    <form method="POST" action="/seller/returns/" style="display: flex; gap: 8px; padding-top: 10px;">
+                        {% csrf_token %}<input type="hidden" name="return_id" value="{{ ret.id }}">
+                        <button type="submit" name="decision" value="picked_up" class="action-pill-btn">Confirm Pickup</button>
+                    </form>
+                {% elif ret.status == 'item_picked_up' %}
+                    <form method="POST" action="/seller/returns/" style="display: flex; gap: 8px; padding-top: 10px;">
+                        {% csrf_token %}<input type="hidden" name="return_id" value="{{ ret.id }}">
+                        <button type="submit" name="decision" value="inspect_pass" class="action-pill-btn">Inspection Passed</button>
+                        <button type="submit" name="decision" value="inspect_fail" class="action-pill-btn">Inspection Failed</button>
+                    </form>
+                {% elif ret.status == 'inspection_passed' %}
+                    <form method="POST" action="/seller/returns/" style="display: flex; gap: 8px; padding-top: 10px;">
+                        {% csrf_token %}<input type="hidden" name="return_id" value="{{ ret.id }}">
+                        {% if ret.request_type == 'return' %}<button type="submit" name="decision" value="refund" class="action-pill-btn">Process Refund</button>{% endif %}
+                        {% if ret.request_type == 'replace' %}<button type="submit" name="decision" value="replace" class="action-pill-btn">Dispatch Replacement</button>{% endif %}
+                    </form>
+                {% elif ret.status == 'replacement_failed' %}
+                    <form method="POST" action="/seller/returns/" style="display: flex; gap: 8px; padding-top: 10px;">
+                        {% csrf_token %}<input type="hidden" name="return_id" value="{{ ret.id }}">
+                        <button type="submit" name="decision" value="replacement_refund" class="action-pill-btn">Issue Wallet Refund</button>
+                    </form>
+                {% else %}
+                    <div style="font-size: 0.82rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px;">
+                        Decision executed: <strong>{{ ret.get_status_display }}</strong>
+                        {% if ret.seller_remarks %}| Remarks: <em>"{{ ret.seller_remarks }}"</em>{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p style="text-align: center; color: var(--text-muted); padding: 40px;">No return or replacement claims pending.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

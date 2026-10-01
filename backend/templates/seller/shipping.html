@@ -1,0 +1,77 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Shipping & Dispatch Center{% endblock %}
+{% block page_subtitle %}Configure store shipping rates, logistics partner integration, and auto rider assignment for doorstep deliveries{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 40px;">
+    <!-- Active Shipments Table -->
+    <div class="glass-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-truck-fast" style="color: var(--primary);"></i> Parcels Ready for Pickup / Dispatch
+            </h3>
+            <span class="badge badge-info">3 In Transit</span>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Assigned Rider</th>
+                        <th>Dispatch Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong style="color: var(--primary);">#ORD-2026-1003</strong></td>
+                        <td>Aman Kumar</td>
+                        <td><span style="color: #10b981; font-weight: 600;">Ramesh Kumar</span></td>
+                        <td><span class="badge badge-warning">Out for Delivery</span></td>
+                        <td><a href="/seller/orders/" class="btn btn-secondary btn-sm">Track</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong style="color: var(--primary);">#ORD-2026-1002</strong></td>
+                        <td>Suresh Poddar</td>
+                        <td><span style="color: var(--text-muted);">Assigning Rider...</span></td>
+                        <td><span class="badge badge-info">Packed</span></td>
+                        <td><button onclick="alert('Dispatch signal sent to nearest delivery rider!')" class="btn btn-primary btn-sm">Notify Rider</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Logistics Settings -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Shipping Rates & Radius
+        </h3>
+
+        <form style="display: flex; flex-direction: column; gap: 14px;" onsubmit="event.preventDefault(); alert('Shipping preferences saved!');">
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Base Shipping Charge (₹)</label>
+                <input type="number" value="40" class="form-control">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Free Delivery Threshold (₹)</label>
+                <input type="number" value="499" class="form-control">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary);">Max Service Radius (km)</label>
+                <input type="number" value="25" class="form-control">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px;">
+                <i class="fa-solid fa-floppy-disk"></i> Save Shipping Config
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

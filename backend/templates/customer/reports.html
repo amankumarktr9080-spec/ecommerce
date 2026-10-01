@@ -1,0 +1,30 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}My Shopping Reports{% endblock %}
+{% block page_subtitle %}Track your orders, spending, saved products, and review activity{% endblock %}
+
+{% block panel_content %}
+<div class="kpi-grid" style="margin-bottom: 28px;">
+    <div class="kpi-card info"><div class="kpi-icon-wrap primary"><i class="fa-solid fa-box"></i></div><div class="kpi-meta"><span>Total Orders</span><h3>{{ total_orders }}</h3><span class="kpi-trend up">{{ delivered_orders }} delivered</span></div></div>
+    <div class="kpi-card success"><div class="kpi-icon-wrap success"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="kpi-meta"><span>Delivered Spend</span><h3>₹{{ spending|floatformat:2 }}</h3><span class="kpi-trend up">Completed purchases</span></div></div>
+    <div class="kpi-card warning"><div class="kpi-icon-wrap warning"><i class="fa-solid fa-heart"></i></div><div class="kpi-meta"><span>Saved Products</span><h3>{{ wishlist_count }}</h3><span class="kpi-trend up">Wishlist items</span></div></div>
+    <div class="kpi-card danger"><div class="kpi-icon-wrap danger"><i class="fa-solid fa-star"></i></div><div class="kpi-meta"><span>Reviews Written</span><h3>{{ reviews_count }}</h3><span class="kpi-trend up">Your feedback</span></div></div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+    <div class="glass-card" style="padding: 24px;"><h3 class="report-card-title"><i class="fa-solid fa-chart-pie"></i> Order Status</h3><div style="height: 280px;"><canvas id="customerStatusChart"></canvas></div></div>
+    <div class="glass-card" style="padding: 24px;"><h3 class="report-card-title"><i class="fa-solid fa-chart-column"></i> Shopping Activity</h3><div style="height: 280px;"><canvas id="customerActivityChart"></canvas></div></div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chartText = '#cbd5e1';
+    const grid = 'rgba(148, 163, 184, 0.18)';
+    new Chart(document.getElementById('customerStatusChart'), { type: 'doughnut', data: { labels: {{ chart_status_labels|safe }}, datasets: [{ data: {{ chart_status_values|safe }}, backgroundColor: ['#4f46e5','#10b981','#f59e0b','#ef4444','#06b6d4'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: chartText } } } } });
+    new Chart(document.getElementById('customerActivityChart'), { type: 'bar', data: { labels: ['Orders','Delivered','Wishlist','Reviews','Cart Units'], datasets: [{ label: 'Count', data: [{{ total_orders }},{{ delivered_orders }},{{ wishlist_count }},{{ reviews_count }},{{ cart_units }}], backgroundColor: ['#4f46e5','#10b981','#f59e0b','#ec4899','#06b6d4'], borderRadius: 7 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: chartText }, grid: { color: grid } }, y: { beginAtZero: true, ticks: { color: chartText, precision: 0 }, grid: { color: grid } } }, plugins: { legend: { labels: { color: chartText } } } } });
+});
+</script>
+{% endblock %}
+{% endblock %}

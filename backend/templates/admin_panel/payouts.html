@@ -1,0 +1,38 @@
+{% extends "base/panel_base.html" %}
+
+{% block page_title %}Seller Payout Requests{% endblock %}
+{% block page_subtitle %}Review seller withdrawal requests and mark approved transfers as paid{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% for payout in payouts %}
+        <div style="padding: 18px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-surface);">
+            <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
+                <strong>{{ payout.seller.store_name }}</strong>
+                <strong style="color: #10b981;">₹{{ payout.amount }}</strong>
+                <span class="role-badge {% if payout.status == 'paid' %}delivery{% elif payout.status == 'rejected' %}admin{% else %}customer{% endif %}">{{ payout.get_status_display }}</span>
+            </div>
+            <p style="margin: 0 0 12px; color: var(--text-secondary); font-size: 0.85rem;">{{ payout.bank_name }} • A/C {{ payout.account_number }} • {{ payout.upi_id }}</p>
+            {% if payout.status == 'pending' %}
+            <form method="POST" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% csrf_token %}
+                <input type="hidden" name="payout_id" value="{{ payout.id }}">
+                <input type="text" name="admin_note" placeholder="Completed bank/UPI transfer reference (required to mark paid)" aria-label="Completed bank or UPI transfer reference" style="flex: 1; min-width: 220px; padding: 9px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-app); color: var(--text-primary);">
+                <button name="action" value="approve" type="submit" class="action-pill-btn" style="background: #10b981; color: #fff; border: none;">Mark Paid</button>
+                <button name="action" value="reject" type="submit" class="action-pill-btn" style="background: #ef4444; color: #fff; border: none;">Reject</button>
+            </form>
+            {% elif payout.status == 'paid' and payout.admin_note %}
+            <small style="color: var(--text-muted);">Transfer reference recorded: {{ payout.admin_note }}</small>
+            {% elif payout.status == 'paid' %}
+            <small style="color: #f59e0b;">Legacy Paid status; no transfer reference is recorded. Verify externally.</small>
+            {% elif payout.admin_note %}
+            <small style="color: var(--text-muted);">{{ payout.admin_note }}</small>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p style="margin: 0; color: var(--text-secondary);">No payout requests found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

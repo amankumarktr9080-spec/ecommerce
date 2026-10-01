@@ -1,0 +1,26 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Payment Interrupted{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="max-width: 600px; margin: 40px auto; padding: 40px; text-align: center;">
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 20px;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    
+    <h2 style="margin: 0 0 10px; color: var(--text-primary);">Payment Couldn't Be Processed</h2>
+    <p style="color: var(--text-secondary); margin: 0 0 24px; font-size: 0.95rem;">
+        Your payment attempt failed or was canceled. No amount was debited. You may retry using E-Wallet or Cash on Delivery (COD).
+    </p>
+
+    <div style="display: flex; justify-content: center; gap: 14px;">
+        <a href="/customer/checkout/" class="btn btn-primary" style="padding: 12px 20px;">
+            <i class="fa-solid fa-rotate-right"></i> Retry Checkout
+        </a>
+        <a href="/customer/cart/" class="btn btn-secondary" style="padding: 12px 20px;">
+            <i class="fa-solid fa-cart-shopping"></i> Return to Cart
+        </a>
+    </div>
+</div>
+{% endblock %}

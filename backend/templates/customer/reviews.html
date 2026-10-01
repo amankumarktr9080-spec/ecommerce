@@ -1,0 +1,331 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}My Product Reviews & Photos{% endblock %}
+{% block page_subtitle %}Share your experience and upload customer review proof photos from device gallery{% endblock %}
+
+{% block panel_content %}
+<style>
+    .customer-reviews-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
+        align-items: start;
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+
+    .customer-review-panel {
+        min-width: 0;
+        padding: 22px;
+    }
+
+    .customer-review-item {
+        min-width: 0;
+        padding: 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--bg-surface);
+    }
+
+    .customer-review-comment {
+        margin: 0 0 10px;
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    .customer-review-photos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .customer-review-photos img {
+        width: 76px;
+        height: 76px;
+        object-fit: cover;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+    }
+
+    .customer-review-form input:not([type="file"]),
+    .customer-review-form select,
+    .customer-review-form textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .review-photo-preview {
+        position: relative;
+        width: 82px;
+        height: 82px;
+        flex: 0 0 82px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        border-radius: 9px;
+        background: var(--bg-surface);
+    }
+
+    .review-photo-preview img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .review-photo-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: grid;
+        width: 24px;
+        height: 24px;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        border-radius: 50%;
+        background: rgba(20, 24, 35, 0.86);
+        color: #fff;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    @media (max-width: 960px) {
+        .customer-reviews-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    @media (max-width: 520px) {
+        .customer-review-panel {
+            padding: 16px;
+        }
+
+        .customer-review-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+<div class="customer-reviews-layout">
+
+    <!-- Left: Existing Reviews -->
+    <div class="glass-card customer-review-panel">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">
+            <i class="fa-solid fa-star" style="color: #f59e0b;"></i> Your Written Reviews ({{ reviews|length }})
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for r in reviews %}
+                <div class="customer-review-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="color: #f59e0b; font-weight: 800; font-size: 0.9rem;">
+                            {% for i in "12345"|make_list %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                        </span>
+                        <small style="color: var(--text-muted);">{{ r.created_at|date:"d M Y" }}</small>
+                    </div>
+
+                    <h4 style="margin: 0 0 4px; font-size: 0.95rem; color: var(--text-primary);">
+                        {{ r.product.title|truncatechars:40 }}
+                    </h4>
+                    <strong style="display: block; margin-bottom: 6px; color: var(--text-primary);">{{ r.title }}</strong>
+                    <p class="customer-review-comment">
+                        "{{ r.comment }}"
+                    </p>
+
+                    {% if r.photo_url_1 or r.photo_url_2 or r.photo_url_3 %}
+                        <div class="customer-review-photos">
+                            {% if r.photo_url_1 %}<a href="{{ r.photo_url_1 }}" target="_blank" rel="noopener"><img src="{{ r.photo_url_1 }}" alt="Review photo 1"></a>{% endif %}
+                            {% if r.photo_url_2 %}<a href="{{ r.photo_url_2 }}" target="_blank" rel="noopener"><img src="{{ r.photo_url_2 }}" alt="Review photo 2"></a>{% endif %}
+                            {% if r.photo_url_3 %}<a href="{{ r.photo_url_3 }}" target="_blank" rel="noopener"><img src="{{ r.photo_url_3 }}" alt="Review photo 3"></a>{% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="customer-review-actions" style="display: flex; gap: 8px; margin-top: 14px;">
+                        <a href="/customer/reviews/?edit={{ r.id }}" class="btn btn-secondary btn-sm" style="text-decoration: none;"><i class="fa-solid fa-pen"></i> Edit</a>
+                        <form method="POST" action="/customer/reviews/" style="margin: 0;" onsubmit="return confirm('Delete this review?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_review">
+                            <input type="hidden" name="review_id" value="{{ r.id }}">
+                            <button type="submit" class="btn btn-danger btn-sm" style="background: var(--danger, #dc2626); color: #fff;"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="text-align: center; color: var(--text-muted); padding: 40px;">No reviews submitted yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right: Write a Review with Gallery Photo Picker -->
+    <div class="glass-card customer-review-panel" style="height: fit-content;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">
+            <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> {% if edit_review %}Edit Product Review{% else %}Submit Product Review{% endif %}
+        </h3>
+
+        <form class="customer-review-form" method="POST" action="/customer/reviews/" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="submit_review">
+            {% if edit_review %}<input type="hidden" name="review_id" value="{{ edit_review.id }}">{% endif %}
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Select Delivered Product to Review</label>
+                <select name="product_id" required title="Select the delivered product you want to review" style="display: block; width: 100%; min-width: 0; max-width: 100%; padding: 10px 36px 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.82rem; text-overflow: ellipsis; overflow: hidden;">
+                    {% for item in delivered_items %}
+                        <option value="{{ item.product.id }}" title="{{ item.product.title }} (Delivered on {{ item.order.created_at|date:'d M Y' }})" {% if edit_review and edit_review.product_id == item.product_id %}selected{% endif %}>{{ item.product.title|truncatechars:42 }} ({{ item.order.created_at|date:"d M Y" }})</option>
+                    {% empty %}
+                        <option value="" disabled selected>No delivered products available for review</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Select Rating</label>
+                <select name="rating" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                    <option value="5" {% if edit_review.rating == 5 %}selected{% endif %}>★★★★★ (5/5) Excellent</option>
+                    <option value="4" {% if edit_review.rating == 4 %}selected{% endif %}>★★★★☆ (4/5) Very Good</option>
+                    <option value="3" {% if edit_review.rating == 3 %}selected{% endif %}>★★★☆☆ (3/5) Average</option>
+                    <option value="2" {% if edit_review.rating == 2 %}selected{% endif %}>★★☆☆☆ (2/5) Poor</option>
+                    <option value="1" {% if edit_review.rating == 1 %}selected{% endif %}>★☆☆☆☆ (1/5) Terrible</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Review Headline / Title</label>
+                  <input type="text" name="title" required value="{{ edit_review.title|default:'' }}" placeholder="e.g. Great sound quality and fast delivery!"
+                      style="padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">Detailed Feedback</label>
+                <textarea name="comment" rows="4" required placeholder="Write about performance, durability, packaging..."
+                          style="padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">{{ edit_review.comment|default:'' }}</textarea>
+            </div>
+
+            <!-- Device Gallery Photo Picker Component -->
+            <div style="padding: 16px; background: var(--bg-app); border: 2px dashed var(--border-color); border-radius: 12px; text-align: center;">
+                <label for="reviewGalleryInput" class="btn btn-secondary" style="margin: 0 auto 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
+                    <i class="fa-solid fa-folder-open" style="color: var(--primary); font-size: 1.1rem;"></i> Choose Photos from Device Gallery
+                </label>
+                <span id="fileCountText" style="display: block; font-size: 0.8rem; color: var(--text-muted);">{% if edit_review_photos %}{{ edit_review_photos|length }} of 3 photos selected{% else %}No image selected from gallery yet{% endif %}</span>
+                <input type="file" id="reviewGalleryInput" name="review_photos" accept="image/*" multiple style="display: none;">
+                <small style="display: block; margin-top: 4px; color: var(--text-muted);">Up to 3 images, 5 MB each.</small>
+                <div id="reviewPhotoPreviewGrid" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px;">
+                    {% for photo in edit_review_photos %}
+                    <div class="review-photo-preview" data-existing-photo data-photo-slot="{{ photo.slot }}">
+                        <img src="{{ photo.url }}" alt="Existing review photo {{ photo.slot }}">
+                        <button type="button" class="review-photo-remove" data-remove-photo-slot="{{ photo.slot }}" aria-label="Remove photo {{ photo.slot }}" title="Remove photo">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div id="removedPhotoSlots"></div>
+            </div>
+
+            <button type="submit" style="padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; margin-top: 4px;">
+                <i class="fa-solid {% if edit_review %}fa-floppy-disk{% else %}fa-paper-plane{% endif %}"></i> {% if edit_review %}Save Changes{% else %}Post Review{% endif %}
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('reviewGalleryInput');
+    const grid = document.getElementById('reviewPhotoPreviewGrid');
+    const labelText = document.getElementById('fileCountText');
+    const removedSlotsContainer = document.getElementById('removedPhotoSlots');
+    const selectedFiles = [];
+
+    if (!input || !grid || !labelText || !removedSlotsContainer) return;
+
+    function existingPhotoCount() {
+        return grid.querySelectorAll('[data-existing-photo]').length;
+    }
+
+    function updatePhotoCount() {
+        const total = existingPhotoCount() + selectedFiles.length;
+        labelText.textContent = total ? total + ' of 3 photos selected' : 'No image selected from gallery yet';
+        labelText.style.color = 'var(--text-muted)';
+        labelText.style.fontWeight = 'normal';
+    }
+
+    function syncFileInput() {
+        const transfer = new DataTransfer();
+        selectedFiles.forEach(function (file) {
+            transfer.items.add(file);
+        });
+        input.files = transfer.files;
+    }
+
+    function renderSelectedFiles() {
+        grid.querySelectorAll('[data-new-photo]').forEach(function (wrapper) {
+            URL.revokeObjectURL(wrapper.dataset.previewUrl);
+            wrapper.remove();
+        });
+
+        selectedFiles.forEach(function (file, index) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'review-photo-preview';
+            wrapper.dataset.newPhoto = '';
+
+            const image = document.createElement('img');
+            const previewUrl = URL.createObjectURL(file);
+            wrapper.dataset.previewUrl = previewUrl;
+            image.src = previewUrl;
+            image.alt = 'Selected review photo ' + (index + 1);
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'review-photo-remove';
+            removeButton.textContent = '×';
+            removeButton.setAttribute('aria-label', 'Remove selected photo ' + (index + 1));
+            removeButton.title = 'Remove photo';
+            removeButton.addEventListener('click', function () {
+                selectedFiles.splice(index, 1);
+                syncFileInput();
+                renderSelectedFiles();
+                updatePhotoCount();
+            });
+
+            wrapper.append(image, removeButton);
+            grid.appendChild(wrapper);
+        });
+    }
+
+    input.addEventListener('change', function () {
+        const newlySelected = Array.from(input.files || []);
+        const totalIfAdded = existingPhotoCount() + selectedFiles.length + newlySelected.length;
+        if (totalIfAdded > 3 || newlySelected.some(function (file) { return file.size > 5 * 1024 * 1024; })) {
+            syncFileInput();
+            labelText.textContent = totalIfAdded > 3 ? 'Choose up to 3 photos total' : 'Each photo must be smaller than 5 MB';
+            labelText.style.color = '#ef4444';
+            labelText.style.fontWeight = '700';
+            return;
+        }
+
+        selectedFiles.push.apply(selectedFiles, newlySelected);
+        syncFileInput();
+        renderSelectedFiles();
+        updatePhotoCount();
+    });
+
+    grid.querySelectorAll('[data-remove-photo-slot]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const slot = button.dataset.removePhotoSlot;
+            const slotInput = document.createElement('input');
+            slotInput.type = 'hidden';
+            slotInput.name = 'remove_photo_slots';
+            slotInput.value = slot;
+            removedSlotsContainer.appendChild(slotInput);
+            button.closest('[data-existing-photo]').remove();
+            updatePhotoCount();
+        });
+    });
+});
+</script>
+{% endblock %}

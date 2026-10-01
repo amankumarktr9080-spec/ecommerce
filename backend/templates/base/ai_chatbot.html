@@ -1,0 +1,53 @@
+{% load static %}
+
+<!-- FLOATING AI CHATBOT ASSISTANT (ACTIVE IN ALL 4 PANELS) -->
+<div class="ai-floating-widget" id="aiFloatingWidget" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
+    <!-- Chat Window -->
+    <div class="ai-chat-window" id="aiChatWindow" style="display: none; width: 360px; max-width: 90vw; height: 500px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 20px; box-shadow: var(--shadow-lg); overflow: hidden; flex-direction: column; position: absolute; bottom: 70px; right: 0; backdrop-filter: blur(16px);">
+        
+        <!-- Header -->
+        <div class="ai-chat-header" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: #fff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+            <div class="ai-header-info" style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700;">ShopVerse Help Assistant</h4>
+                    <small style="font-size: 0.72rem; opacity: 0.9;">● Order, payment & shopping help</small>
+                </div>
+            </div>
+            <button onclick="toggleAiChat()" style="background: none; border: none; color: #fff; font-size: 1.1rem; cursor: pointer; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Conversation Stream -->
+        <div class="ai-chat-messages" id="aiChatMessages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: var(--bg-app);">
+            <div class="chat-bubble bot" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px 12px 12px 2px; padding: 12px 14px; font-size: 0.85rem; color: var(--text-primary); line-height: 1.5; box-shadow: var(--shadow-sm);">
+                👋 Hello <strong>{% if request.user.is_authenticated %}{{ request.user.first_name|default:request.user.username }}{% else %}there{% endif %}</strong>! Ask about orders, invoices, referrals, payments, returns, or offers.
+            </div>
+        </div>
+
+        <!-- Role-Specific Quick Prompt Chips -->
+        <div class="ai-quick-prompts" style="padding: 10px 14px; background: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; gap: 6px; flex-wrap: wrap; overflow-x: auto;">
+            <button class="ai-chip" onclick="sendAiPrompt('Hi')" style="padding: 6px 12px; border-radius: 20px; background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%); color: #fff; border: none; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                👋 Send "Hi" Menu
+            </button>
+        </div>
+
+        <!-- Input Box -->
+        <div class="ai-chat-input-box" style="padding: 10px 14px; background: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="aiChatInput" placeholder="Ask about your ShopVerse account..." autocomplete="off" onkeypress="if(event.key === 'Enter') sendAiPrompt()"
+                   style="flex: 1; padding: 10px 14px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem; outline: none;">
+            <button type="button" onclick="sendAiPrompt()" title="Send Message" style="width: 38px; height: 38px; border-radius: 50%; background: #4f46e5; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Orb Button -->
+    <button class="ai-orb-btn" onclick="toggleAiChat()" title="Open ShopVerse Help Assistant"
+            style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4); position: relative;">
+        <i class="fa-solid fa-robot"></i>
+    </button>
+</div>

@@ -1,0 +1,119 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Order Fulfillment Management{% endblock %}
+{% block page_subtitle %}Execute order dispatch workflow: Accept ➔ Pack ➔ Ship to Logistics Hub{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--text-primary);">
+        Vendor Orders Queue ({{ orders.count }})
+    </h3>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+                <tr style="background: var(--bg-app); text-align: left;">
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Order Number</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Customer & Phone</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Items Summary</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Your Net Earning</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Current Status</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Delivery Partner</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Workflow Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ord in orders %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 14px;">
+                            <strong>#{{ ord.order_number }}</strong><br>
+                            <small style="color: var(--text-muted);">{{ ord.created_at|date:"d M, h:i A" }}</small>
+                        </td>
+                        <td style="padding: 14px;">
+                            <strong>{{ ord.customer_name }}</strong><br>
+                            <small style="color: var(--text-muted);">{{ ord.customer_phone }}</small>
+                        </td>
+                        <td style="padding: 14px;">
+                            {% for itm in ord.items.all %}
+                                <div>{{ itm.quantity }}x {{ itm.product.title|truncatechars:26 }}</div>
+                            {% endfor %}
+                        </td>
+                        <td style="padding: 14px; font-weight: 700; color: #059669;">
+                            ₹{{ ord.seller_net_earnings }}
+                                    <small style="display: block; color: var(--text-muted); font-size: 0.72rem;">Gross: ₹{{ ord.grand_total }}</small>
+                                    {% if ord.status != 'delivered' %}<small style="display: block; color: var(--warning); font-size: 0.68rem;">Clears after delivery</small>{% endif %}
+                        </td>
+                        <td style="padding: 14px;">
+                            <span class="role-badge {% if ord.status == 'delivered' %}delivery{% elif ord.status == 'shipped' or ord.status == 'packed' %}admin{% else %}customer{% endif %}">
+                                {{ ord.get_status_display }}
+                            </span>
+                            {% if ord.has_reschedule and ord.status != 'delivered' and ord.status != 'cancelled' %}
+                                <span class="badge badge-warning" style="display: inline-block; margin-top: 6px;">RESCHEDULED</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 14px; min-width: 210px;">
+                            {% if ord.delivery_partner %}
+                                <strong style="display: block; color: #059669;">{{ ord.delivery_partner.user.get_full_name|default:ord.delivery_partner.user.username }}</strong>
+                                <small style="color: var(--text-muted);">{{ ord.delivery_partner.vehicle_number }}{% if ord.delivery_partner.is_online %} • ONLINE{% else %} • OFFLINE{% endif %}</small>
+                            {% endif %}
+                            {% if ord.status == 'packed' or ord.status == 'shipped' %}
+                            <form method="POST" action="/seller/orders/" style="display: flex; gap: 6px; margin-top: 8px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="assign_delivery">
+                                <input type="hidden" name="order_id" value="{{ ord.id }}">
+                                <select name="delivery_partner_id" data-native-select="true" required title="Choose delivery partner" style="min-width: 130px; max-width: 170px; padding: 7px; border: 1px solid var(--border-color); border-radius: 7px; background: var(--bg-app); color: var(--text-primary); font-size: 0.75rem;">
+                                    <option value="">Assign rider</option>
+                                    {% for rider in delivery_partners %}
+                                        <option value="{{ rider.id }}" {% if ord.delivery_partner_id == rider.id %}selected{% endif %}>{{ rider.user.get_full_name|default:rider.user.username }}{% if rider.is_online %} (Online){% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="action-pill-btn" title="Assign delivery partner" style="padding: 7px 9px; background: var(--primary); color: #fff; border: none;">Assign</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 14px;">
+                            {% if ord.status == 'pending' %}
+                                <form method="POST" action="/seller/orders/" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="order_id" value="{{ ord.id }}">
+                                    <input type="hidden" name="status" value="confirmed">
+                                    <button type="submit" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; font-size: 0.78rem;">
+                                        <i class="fa-solid fa-check"></i> Accept Order
+                                    </button>
+                                </form>
+                            {% elif ord.status == 'confirmed' %}
+                                <form method="POST" action="/seller/orders/" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="order_id" value="{{ ord.id }}">
+                                    <input type="hidden" name="status" value="packed">
+                                    <button type="submit" class="action-pill-btn" style="background: #f59e0b; color: #fff; border: none; font-size: 0.78rem;">
+                                        <i class="fa-solid fa-box"></i> Mark Packed
+                                    </button>
+                                </form>
+                            {% elif ord.status == 'packed' %}
+                                <form method="POST" action="/seller/orders/" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="order_id" value="{{ ord.id }}">
+                                    <input type="hidden" name="status" value="shipped">
+                                    <button type="submit" class="action-pill-btn" style="background: #10b981; color: #fff; border: none; font-size: 0.78rem;">
+                                        <i class="fa-solid fa-truck-fast"></i> Ship Item
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span style="font-size: 0.78rem; color: #059669; font-weight: 600;">
+                                    <i class="fa-solid fa-circle-check"></i> Dispatched / Done
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No orders found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

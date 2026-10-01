@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+
+{% block title %}FAQ - E-Commerce{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+
+    <h1>Frequently Asked Questions</h1>
+
+</section>
+
+
+<section class="faq-section">
+    {% for item in faq_items %}
+    <details>
+        <summary>{{ item.question }}</summary>
+        <p>{{ item.answer|linebreaksbr }}</p>
+    </details>
+    {% empty %}<p>No FAQs available right now.</p>
+    {% endfor %}
+
+</section>
+
+{% endblock %}

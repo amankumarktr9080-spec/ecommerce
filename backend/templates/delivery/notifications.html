@@ -1,0 +1,57 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery Notifications{% endblock %}
+{% block page_subtitle %}Order assignments and updates for your deliveries{% endblock %}
+
+{% block panel_content %}
+<div style="max-width: 920px; margin: 0 auto 40px; display: flex; flex-direction: column; gap: 12px;" data-notification-selection>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <h2 style="margin: 0; font-size: 1.05rem; color: var(--text-primary);">Your notifications ({{ notifications|length }})</h2>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <form method="POST" action="/delivery/notifications/" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_all_read">
+            <button type="submit" class="btn btn-secondary btn-sm" {% if not unread_count %}disabled{% endif %}>
+                <i class="fa-solid fa-check-double"></i> Mark All as Read ({{ unread_count }})
+            </button>
+        </form>
+        {% if notifications %}
+        <form id="deliveryNotificationDeleteForm" method="POST" action="/delivery/notifications/" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_selected">
+            <button type="button" class="btn btn-secondary btn-sm" data-delete-mode><i class="fa-solid fa-trash"></i> Delete</button>
+            <label data-select-all-label hidden style="color: var(--text-secondary);"><input type="checkbox" data-select-all> Select all</label>
+            <button type="submit" class="btn btn-danger btn-sm" data-delete-selected hidden disabled style="background: var(--danger, #dc2626); color: #fff; border-color: var(--danger, #dc2626);"><i class="fa-solid fa-trash"></i> Delete selected (0)</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-cancel-selection hidden>Cancel</button>
+        </form>
+        {% endif %}
+        </div>
+    </div>
+    {% for notification in notifications %}
+    <article class="glass-card" style="padding: 18px 20px; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 16px;">
+        <input class="notification-select" type="checkbox" name="notification_ids" value="{{ notification.id }}" form="deliveryNotificationDeleteForm" aria-label="Select notification" style="visibility: hidden; width: 18px; height: 18px; margin: 0; accent-color: var(--primary);">
+        <div style="display: flex; gap: 12px; min-width: 0;">
+            <span style="width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; border-radius: 9px; background: rgba(79, 70, 229, 0.14); color: var(--primary);">
+                <i class="fa-solid {% if notification.notification_type == 'delivery' %}fa-truck-fast{% else %}fa-bell{% endif %}"></i>
+            </span>
+            <div style="min-width: 0;">
+                <h3 style="margin: 0 0 5px; font-size: 0.96rem; color: var(--text-primary);">{{ notification.title }}</h3>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">{{ notification.message }}</p>
+                <small style="display: block; margin-top: 8px; color: var(--text-muted);">{{ notification.created_at|date:"d M Y, h:i A" }}{% if not notification.is_read %} · Unread{% endif %}</small>
+            </div>
+        </div>
+        {% if notification.link %}
+        <a href="{{ notification.link }}" class="action-pill-btn" style="flex: 0 0 auto; text-decoration: none; background: var(--bg-surface); border: 1px solid var(--border-color);">Open</a>
+        {% endif %}
+    </article>
+    {% empty %}
+    <div class="glass-card" style="padding: 44px 24px; text-align: center;">
+        <i class="fa-regular fa-bell" style="font-size: 2.2rem; color: var(--text-muted); margin-bottom: 12px;"></i>
+        <h3 style="margin: 0 0 6px; color: var(--text-primary);">No notifications yet</h3>
+        <p style="margin: 0; color: var(--text-secondary);">Delivery assignments and order updates will appear here.</p>
+    </div>
+    {% endfor %}
+</div>
+<script src="{% static 'js/notification-selection.js' %}" defer></script>
+{% endblock %}

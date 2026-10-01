@@ -1,0 +1,314 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Edit Product Listing #{{ product.id }}{% endblock %}
+{% block page_subtitle %}Update pricing, commission breakdown, inventory stock, and return terms{% endblock %}
+
+{% block panel_content %}
+<style>
+    .edit-image-thumb {
+        position: relative;
+        width: 84px;
+        height: 84px;
+        flex: 0 0 84px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        border-radius: 9px;
+        background: #fff;
+        display: inline-block;
+    }
+
+    .edit-image-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .gallery-preview-row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .edit-image-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: grid;
+        width: 24px;
+        height: 24px;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        border-radius: 50%;
+        background: rgba(20, 24, 35, 0.88);
+        color: #fff;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+    }
+</style>
+<div class="glass-card" style="padding: 32px; max-width: 900px; margin: 0 auto 40px;">
+    
+    <form method="POST" action="/seller/products/{{ product.id }}/edit/" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 24px;">
+        {% csrf_token %}
+
+        <!-- Product Basic Info -->
+        <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                1. General Information
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Product Title *</label>
+                    <input type="text" name="title" value="{{ product.title }}" required
+                           style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Category
+                        <select id="productCategorySelect" name="category_id" required>
+                            {% for category in categories %}<option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Subcategory
+                        <select id="productSubcategorySelect" name="subcategory_id" disabled>
+                            <option value="">No subcategory</option>
+                            {% for subcategory in subcategories %}<option value="{{ subcategory.id }}" data-category-id="{{ subcategory.category_id }}" {% if product.subcategory_id == subcategory.id %}selected{% endif %}>{{ subcategory.name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Brand
+                        <select id="productBrandSelect" name="brand_id" disabled>
+                            <option value="">No specific brand</option>
+                            {% for brand in brands %}<option value="{{ brand.id }}" data-category-id="{{ brand.subcategory.category_id }}" data-subcategory-id="{{ brand.subcategory_id }}" {% if product.brand_id == brand.id %}selected{% endif %}>{{ brand.name }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Item code
+                        <input class="seller-readonly-field" value="{{ product.item_code }}" readonly aria-label="Item code">
+                    </label>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">SKU
+                        <input class="seller-readonly-field" value="{{ product.sku }}" readonly aria-label="SKU">
+                    </label>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">1. Main Cover Image (URL or Select from Device Gallery) *</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input type="text" id="editMainImageUrlInput" name="image_url" value="{{ product.main_image_url }}"
+                               style="flex: 1; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                        <label for="editMainImageFileInput" class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                            <i class="fa-solid fa-folder-open"></i> Pick from Gallery
+                        </label>
+                        <input type="file" id="editMainImageFileInput" name="main_image_file" accept="image/*" style="display: none;" onchange="previewEditMainImage(this)">
+                    </div>
+                    <small style="display: block; margin-top: 6px; color: var(--text-muted);">Choose one cover image, up to 5 MB.</small>
+                    <div id="editMainImagePreviewWrap" class="edit-image-thumb" style="margin-top: 10px; {% if not product.main_image_url %}display: none;{% endif %}">
+                        <img id="editMainImagePreview" src="{{ product.main_image_url }}" alt="Current cover image">
+                        <button type="button" id="removeEditMainImage" class="edit-image-remove" aria-label="Remove cover image" title="Remove cover image">&times;</button>
+                    </div>
+                    <input type="hidden" id="removeMainImageFlag" name="remove_main_image" value="0">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;"><i class="fa-solid fa-images"></i> Gallery Images (up to 3 total)</label>
+                    <div id="editExistingGallery" class="gallery-preview-row">
+                        {% for image in product.gallery_images.all %}
+                        <div class="edit-image-thumb" data-existing-gallery>
+                            <img src="{{ image.image_url }}" alt="Product gallery image">
+                            <button type="button" class="edit-image-remove" data-remove-gallery-image="{{ image.id }}" aria-label="Remove gallery image" title="Remove image">&times;</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div id="removeGalleryImageIds"></div>
+                    <label for="editGalleryImageFiles" class="btn btn-secondary" style="cursor: pointer;"><i class="fa-solid fa-folder-open"></i> Choose Gallery Images</label>
+                    <input type="file" id="editGalleryImageFiles" name="gallery_image_files" accept="image/*" multiple style="display: none;">
+                    <small id="editGalleryImageCount" style="display: block; margin-top: 6px; color: var(--text-muted);">Existing gallery images can be removed with &times;. Add up to 3 images total, 5 MB each.</small>
+                    <div id="editGalleryPreviewGrid" class="gallery-preview-row" style="margin-top: 10px;"></div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Product Description</label>
+                    <textarea name="description" rows="3" style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">{{ product.description }}</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Base price / seller earning (₹)
+                        <input type="number" name="base_price" min="1" step="0.01" value="{{ product.base_price }}" required>
+                    </label>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Delivery charge (₹)
+                        <input type="number" name="delivery_charge" min="0" step="0.01" value="{{ product.delivery_charge }}" required>
+                    </label>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">MRP (₹)
+                        <input type="number" name="mrp" min="0" step="0.01" value="{{ product.mrp }}" required>
+                    </label>
+                    <div style="display: grid; gap: 6px; font-size: 0.85rem;"><strong>Customer price</strong><span>₹{{ product.selling_price }}</span></div>
+                    <div style="display: grid; gap: 6px; font-size: 0.85rem;"><strong>Platform commission</strong><span>{{ product.admin_commission_percentage }}%</span></div>
+                    <div style="display: grid; gap: 6px; font-size: 0.85rem;"><strong>Tax</strong><span>{{ product.tax_percentage }}%</span></div>
+                    <div style="display: grid; gap: 6px; font-size: 0.85rem;"><strong>Discount</strong><span>{{ product.discount_percentage }}%</span></div>
+                    <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600;">Stock quantity
+                        <input type="number" name="stock" min="0" step="1" value="{{ product.stock }}" required>
+                    </label>
+                </div>
+
+                <fieldset style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <legend style="padding: 0 6px; font-size: 0.85rem; font-weight: 700;">Listing status</legend>
+                    <label><input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}> Active listing</label>
+                    <label><input type="checkbox" name="is_featured" {% if product.is_featured %}checked{% endif %}> Featured</label>
+                    <label><input type="checkbox" name="is_flash_sale" {% if product.is_flash_sale %}checked{% endif %}> Flash sale</label>
+                </fieldset>
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+                    <fieldset style="padding: 14px; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <legend style="padding: 0 6px; font-size: 0.85rem; font-weight: 700;">Returns</legend>
+                        <label><input type="checkbox" name="is_returnable" {% if product.is_returnable %}checked{% endif %}> Return eligible</label>
+                        <label style="display: grid; gap: 6px; margin-top: 10px;">Return window (days)
+                            <input type="number" name="return_window_days" min="0" max="30" value="{{ product.return_window_days }}">
+                        </label>
+                    </fieldset>
+                    <fieldset style="padding: 14px; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <legend style="padding: 0 6px; font-size: 0.85rem; font-weight: 700;">Replacement</legend>
+                        <label><input type="checkbox" name="is_replaceable" {% if product.is_replaceable %}checked{% endif %}> Replacement eligible</label>
+                        <label style="display: grid; gap: 6px; margin-top: 10px;">Replacement window (days)
+                            <input type="number" name="replacement_window_days" min="0" max="30" value="{{ product.replacement_window_days }}">
+                        </label>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" style="padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer;">
+            <i class="fa-solid fa-floppy-disk"></i> Save All Product Details
+        </button>
+    </form>
+</div>
+
+<script>
+function previewEditMainImage(input) {
+    if (input.files && input.files[0]) {
+        document.getElementById('editMainImagePreview').src = URL.createObjectURL(input.files[0]);
+        document.getElementById('editMainImagePreviewWrap').style.display = 'block';
+        document.getElementById('removeMainImageFlag').value = '0';
+    }
+}
+
+document.getElementById('removeEditMainImage').addEventListener('click', function () {
+    document.getElementById('editMainImageUrlInput').value = '';
+    document.getElementById('editMainImageFileInput').value = '';
+    document.getElementById('removeMainImageFlag').value = '1';
+    document.getElementById('editMainImagePreviewWrap').style.display = 'none';
+});
+
+const editGalleryInput = document.getElementById('editGalleryImageFiles');
+const editGalleryGrid = document.getElementById('editGalleryPreviewGrid');
+const editGalleryCount = document.getElementById('editGalleryImageCount');
+const removeGalleryContainer = document.getElementById('removeGalleryImageIds');
+const selectedGalleryFiles = [];
+
+function syncEditGalleryFiles() {
+    const transfer = new DataTransfer();
+    selectedGalleryFiles.forEach(file => transfer.items.add(file));
+    editGalleryInput.files = transfer.files;
+}
+
+function renderEditGalleryFiles() {
+    editGalleryGrid.querySelectorAll('[data-new-gallery]').forEach(wrapper => {
+        URL.revokeObjectURL(wrapper.dataset.previewUrl);
+        wrapper.remove();
+    });
+    selectedGalleryFiles.forEach((file, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'edit-image-thumb';
+        wrapper.dataset.newGallery = '';
+        const previewUrl = URL.createObjectURL(file);
+        wrapper.dataset.previewUrl = previewUrl;
+        const image = document.createElement('img');
+        image.src = previewUrl;
+        image.alt = 'Selected gallery image ' + (index + 1);
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'edit-image-remove';
+        removeButton.textContent = '×';
+        removeButton.setAttribute('aria-label', 'Remove selected gallery image');
+        removeButton.addEventListener('click', () => {
+            selectedGalleryFiles.splice(index, 1);
+            syncEditGalleryFiles();
+            renderEditGalleryFiles();
+            updateEditGalleryCount();
+        });
+        wrapper.append(image, removeButton);
+        editGalleryGrid.appendChild(wrapper);
+    });
+}
+
+function updateEditGalleryCount() {
+    const total = document.querySelectorAll('#editExistingGallery [data-existing-gallery]').length + selectedGalleryFiles.length;
+    editGalleryCount.textContent = total + ' of 3 gallery images selected';
+    editGalleryCount.style.color = 'var(--text-muted)';
+}
+
+editGalleryInput.addEventListener('change', function () {
+    const incoming = Array.from(editGalleryInput.files || []);
+    const total = document.querySelectorAll('#editExistingGallery [data-existing-gallery]').length + selectedGalleryFiles.length + incoming.length;
+    if (total > 3 || incoming.some(file => file.size > 5 * 1024 * 1024)) {
+        syncEditGalleryFiles();
+        editGalleryCount.textContent = total > 3 ? 'Choose up to 3 gallery images total.' : 'Each image must be smaller than 5 MB.';
+        editGalleryCount.style.color = '#ef4444';
+        return;
+    }
+    selectedGalleryFiles.push(...incoming);
+    syncEditGalleryFiles();
+    renderEditGalleryFiles();
+    updateEditGalleryCount();
+});
+
+document.querySelectorAll('[data-remove-gallery-image]').forEach(button => {
+    button.addEventListener('click', function () {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'remove_gallery_image_ids';
+        input.value = button.dataset.removeGalleryImage;
+        removeGalleryContainer.appendChild(input);
+        button.closest('[data-existing-gallery]').remove();
+        updateEditGalleryCount();
+    });
+});
+
+const editSubcategoryOptions = Array.from(document.getElementById('productSubcategorySelect').options).slice(1).map(option => option.cloneNode(true));
+const editBrandOptions = Array.from(document.getElementById('productBrandSelect').options).slice(1).map(option => option.cloneNode(true));
+
+function filterProductTaxonomy(resetSelections = false) {
+    const categorySelect = document.getElementById('productCategorySelect');
+    const subcategorySelect = document.getElementById('productSubcategorySelect');
+    const brandSelect = document.getElementById('productBrandSelect');
+    const categoryId = categorySelect.value;
+
+    const populate = (select, sourceOptions, emptyLabel, selectedValue) => {
+        select.replaceChildren(new Option(categoryId ? emptyLabel : 'Choose a category first', ''));
+        const matchingOptions = sourceOptions.filter(option => option.dataset.categoryId === categoryId);
+        matchingOptions.forEach(option => {
+            const clonedOption = option.cloneNode(true);
+            if (!resetSelections && clonedOption.value === selectedValue) clonedOption.selected = true;
+            select.add(clonedOption);
+        });
+        select.disabled = !categoryId || matchingOptions.length === 0;
+        if (categoryId && matchingOptions.length === 0) {
+            select.options[0].textContent = `No ${emptyLabel.toLowerCase()} available for this category`;
+        }
+    };
+
+    populate(subcategorySelect, editSubcategoryOptions, 'No subcategory', '{{ product.subcategory_id|default:"" }}');
+    populate(brandSelect, editBrandOptions, 'No specific brand', '{{ product.brand_id|default:"" }}');
+    subcategorySelect.dispatchEvent(new Event('optionschange'));
+    brandSelect.dispatchEvent(new Event('optionschange'));
+}
+
+document.getElementById('productCategorySelect')?.addEventListener('change', () => filterProductTaxonomy(true));
+filterProductTaxonomy(false);
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Refund Status & Ledger{% endblock %}
+{% block page_subtitle %}Track customer return refund credits directly into E-Wallet{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 28px; max-width: 900px; margin: 0 auto 40px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 20px; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-money-bill-transfer" style="color: #10b981;"></i> Processed Refunds
+    </h3>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <strong style="color: var(--text-primary); display: block;">Refund #RFD-98721 • Order #ORD-2026-1001</strong>
+                <small style="color: var(--text-secondary);">Reason: Defective unit • Credited to E-Wallet</small>
+            </div>
+            <div style="text-align: right;">
+                <strong style="color: #10b981; font-size: 1.1rem; display: block;">+ ₹1,299.00</strong>
+                <span class="role-badge delivery">Refund Credited</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery Fleet & Rider Management{% endblock %}
+{% block page_subtitle %}Admin-only rider onboarding, vehicle credential verification, and duty status oversight{% endblock %}
+
+{% block panel_content %}
+<!-- Onboarding Notification Banner -->
+<div class="glass-card" style="padding: 20px; margin-bottom: 24px; border-left: 6px solid #f59e0b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <h4 style="margin: 0 0 6px 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-shield-halved" style="color: #f59e0b;"></i> Admin Fleet Dispatch Provisioning Active
+        </h4>
+        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+            Delivery partners are provisioned exclusively via the Admin Control Center. No public rider self-registration is allowed.
+        </p>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('addRiderModal').style.display='flex'">
+        <i class="fa-solid fa-plus"></i> Onboard Delivery Partner
+    </button>
+</div>
+
+<!-- Riders List Table -->
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-motorcycle" style="color: var(--primary);"></i> Active Fleet Partners ({{ riders|length }})
+        </h3>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Rider Name & Username</th>
+                    <th>Phone & Email</th>
+                    <th>Vehicle Details</th>
+                    <th>Driving License</th>
+                    <th>Rating</th>
+                    <th>Duty Status</th>
+                    <th>Admin Approval</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in riders %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">
+                                {{ r.user.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <span style="font-weight: 700; color: var(--text-primary); display: block;">{{ r.user.get_full_name|default:r.user.username }}</span>
+                                <small style="color: var(--text-muted); font-family: monospace;">@{{ r.user.username }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            <div><i class="fa-solid fa-phone" style="font-size: 0.75rem;"></i> {{ r.user.phone|default:"N/A" }}</div>
+                            <div><i class="fa-solid fa-envelope" style="font-size: 0.75rem;"></i> {{ r.user.email }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--text-primary); display: block;">{{ r.vehicle_number|default:"DL-01-AB-1234" }}</span>
+                        <small style="color: var(--text-secondary);">{{ r.get_vehicle_type_display }}</small>
+                    </td>
+                    <td>
+                        <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">
+                            {{ r.driving_license|default:"DL-2024-987654" }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color: #f59e0b; font-weight: 700;">★ {{ r.rating }}</span>
+                    </td>
+                    <td>
+                        <span class="badge" style="background: {% if r.is_online %}rgba(16, 185, 129, 0.15){% else %}rgba(100, 116, 139, 0.15){% endif %}; color: {% if r.is_online %}#10b981{% else %}var(--text-muted){% endif %}; font-weight: 700;">
+                            {% if r.is_online %}<i class="fa-solid fa-circle"></i> Online{% else %}<i class="fa-regular fa-circle"></i> Offline{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if r.is_approved %}success{% else %}danger{% endif %}">
+                            {% if r.is_approved %}Approved{% else %}Suspended{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/admin-panel/delivery-partners/{{ r.id }}/toggle-status/" class="btn btn-secondary btn-sm" title="Toggle Approval">
+                            {% if r.is_approved %}
+                            <i class="fa-solid fa-ban" style="color: #ef4444;"></i>
+                            {% else %}
+                            <i class="fa-solid fa-check" style="color: #10b981;"></i>
+                            {% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;">No delivery partners onboarded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Onboard New Delivery Partner -->
+<div id="addRiderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 28px; background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-motorcycle" style="color: var(--primary);"></i> Onboard Delivery Partner
+            </h3>
+            <button type="button" onclick="document.getElementById('addRiderModal').style.display='none'" style="background: none; border: none; font-size: 1.3rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+        </div>
+
+        <form method="POST" action="/admin-panel/delivery-partners/add/" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Full Name *</label>
+                    <input type="text" name="full_name" required placeholder="e.g. Ramesh Kumar" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Login Username *</label>
+                    <input type="text" name="username" data-username-check required autocomplete="username" placeholder="e.g. ramesh_rider" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                    <small data-username-status aria-live="polite" style="display: block; min-height: 18px; margin-top: 4px;"></small>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Login Password *</label>
+                    <div style="position: relative;">
+                        <input id="admin-rider-password" type="password" name="password" required autocomplete="new-password" placeholder="Set rider temporary password" style="width: 100%; padding: 10px 42px 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <button type="button" data-password-toggle="admin-rider-password" aria-label="Show password" title="Show password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--text-secondary); cursor: pointer;"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Confirm Password *</label>
+                    <div style="position: relative;">
+                        <input id="admin-rider-confirm-password" type="password" name="confirm_password" required autocomplete="new-password" placeholder="Confirm password" style="width: 100%; padding: 10px 42px 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <button type="button" data-password-toggle="admin-rider-confirm-password" aria-label="Show password" title="Show password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--text-secondary); cursor: pointer;"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Email Address *</label>
+                    <input type="email" name="email" required placeholder="ramesh@rider.com" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Phone Number *</label>
+                    <input type="tel" name="phone" required placeholder="+91 9876543210" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Vehicle Type *</label>
+                    <select name="vehicle_type" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="bike">Motorcycle / Two Wheeler</option>
+                        <option value="scooter">Electric Scooter</option>
+                        <option value="van">Delivery Van / 4 Wheeler</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Vehicle Plate Number *</label>
+                    <input type="text" name="vehicle_number" required placeholder="DL-01-AB-1234" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Driving License Number *</label>
+                    <input type="text" name="driving_license" required placeholder="DL-2024-987654" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Residential Address *</label>
+                    <textarea name="address" rows="2" required placeholder="Full residential address" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);"></textarea>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">City *</label>
+                    <input type="text" name="city" required placeholder="City" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">State *</label>
+                    <input type="text" name="state" required placeholder="State" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Pincode *</label>
+                    <input type="text" name="pincode" required placeholder="110001" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Payout Bank Name</label>
+                    <input type="text" name="bank_name" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Payout UPI ID</label>
+                    <input type="text" name="upi_id" placeholder="rider@okaxis" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">KYC Documents (PDF, max 5 MB) *</label>
+                <input type="file" name="kyc_document" accept="application/pdf,.pdf" required style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-secondary);">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('addRiderModal').style.display='none'">Cancel</button>
+                <button type="submit" data-username-submit class="btn btn-primary"><i class="fa-solid fa-check"></i> Register Fleet Rider</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

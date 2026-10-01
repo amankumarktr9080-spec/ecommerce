@@ -1,0 +1,184 @@
+{% extends "base/base.html" %}
+
+{% block title %}Login - ShopVerse Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media (max-width: 768px) {
+        .login-page {
+            min-height: auto !important;
+            align-items: flex-start !important;
+            padding: 24px 16px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="login-page auth-form-page" style="min-height: 85vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 480px; padding: 36px; border-radius: 20px; box-shadow: var(--shadow-lg);">
+        
+        <div style="text-align: center; margin-bottom: 28px;">
+            <div style="width: 60px; height: 60px; border-radius: 16px; background: var(--accent-gradient); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8rem; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 700; margin: 0; color: var(--text-primary);">Welcome Back</h2>
+            <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 6px;">Sign in to access your customized portal</p>
+        </div>
+
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="toast-msg {% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}" style="margin-bottom: 18px; animation: none;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>{{ msg }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="/auth/login/" style="display: flex; flex-direction: column; gap: 18px;">
+            {% csrf_token %}
+
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Username or Email</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="text" name="username" id="loginUsername" required placeholder="Enter username or email"
+                           style="width: 100%; padding: 12px 14px 12px 42px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                </div>
+            </div>
+
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary);">Password</label>
+                    <a href="/auth/forgot-password/" style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Forgot Password?</a>
+                </div>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-key" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                          <input type="password" name="password" id="loginPassword" class="auth-field" required placeholder="Enter your password"
+                              style="width: 100%; padding: 12px 44px 12px 42px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                          <button type="button" onclick="togglePasswordVisibility('loginPassword', this)" title="Show or hide password" aria-label="Show or hide password" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--text-muted); cursor: pointer; padding: 4px;">
+                           <i class="fa-solid fa-eye"></i>
+                          </button>
+                </div>
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);">
+                Sign In to Portal
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div style="display: flex; align-items: center; margin: 24px 0; color: var(--text-muted); font-size: 0.8rem;">
+            <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            <span style="padding: 0 12px;">OR CONTINUE WITH</span>
+            <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+        </div>
+
+        <!-- Google 1-Click Login Trigger -->
+        <a href="{% url 'users:google_login' %}" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; cursor: pointer;">
+            <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.347 2.825.957 4.039l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+            </svg>
+            Sign in with Google
+        </a>
+
+        <p style="text-align: center; margin-top: 24px; font-size: 0.85rem; color: var(--text-secondary);">
+            Are you a new customer? <a href="/auth/register/" style="color: var(--primary); font-weight: 600;">Create Account</a>
+        </p>
+    </div>
+</section>
+
+<!-- GOOGLE ACCOUNT CHOOSER MODAL (EXACT SPEC MATCH FOR SCREENSHOT media_1790147956256.jpg) -->
+<div id="googleAccountModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #121212; color: #ffffff; width: 100%; max-width: 440px; border-radius: 20px; border: 1px solid #2e2e2e; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); font-family: system-ui, -apple-system, sans-serif;">
+        <!-- Header -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <svg width="22" height="22" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                    <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.347 2.825.957 4.039l3.007-2.332z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                </svg>
+                <span style="font-size: 0.95rem; font-weight: 500; color: #e3e3e3;">Sign in with Google</span>
+            </div>
+            <button onclick="closeGoogleModal()" style="background: none; border: none; color: #a0a0a0; font-size: 1.2rem; cursor: pointer;">✕</button>
+        </div>
+
+        <h2 style="font-size: 1.6rem; font-weight: 400; margin: 0 0 6px; color: #ffffff;">Choose an account</h2>
+        <p style="font-size: 0.9rem; color: #9aa0a6; margin: 0 0 24px;">to continue to <strong style="color: #8ab4f8;">ShopVerse</strong></p>
+
+        <!-- Account List -->
+        <div style="display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto;">
+            
+            <!-- Account 1 -->
+            <a href="/auth/google-login/?email=amankumarktr9080@gmail.com" style="display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid #282828; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#1f1f1f'" onmouseout="this.style.background='transparent'">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #a50e0e; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">A</div>
+                <div>
+                    <div style="font-weight: 500; color: #ffffff; font-size: 0.95rem;">AMAN KUMAR</div>
+                    <div style="font-size: 0.82rem; color: #9aa0a6;">amankumarktr9080@gmail.com</div>
+                </div>
+            </a>
+
+            <!-- Account 2 -->
+            <a href="/auth/google-login/?email=amankumarpoddar462@gmail.com" style="display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid #282828; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#1f1f1f'" onmouseout="this.style.background='transparent'">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #e91e63; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">A</div>
+                <div>
+                    <div style="font-weight: 500; color: #ffffff; font-size: 0.95rem;">Aman Kumar poddar</div>
+                    <div style="font-size: 0.82rem; color: #9aa0a6;">amankumarpoddar462@gmail.com</div>
+                </div>
+            </a>
+
+            <!-- Account 3 -->
+            <a href="/auth/google-login/?email=edunest61@gmail.com" style="display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid #282828; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#1f1f1f'" onmouseout="this.style.background='transparent'">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #0284c7; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">E</div>
+                <div>
+                    <div style="font-weight: 500; color: #ffffff; font-size: 0.95rem;">EduNest</div>
+                    <div style="font-size: 0.82rem; color: #9aa0a6;">edunest61@gmail.com</div>
+                </div>
+            </a>
+
+            <!-- Account 4 -->
+            <a href="/auth/google-login/?email=booksforstudent8@gmail.com" style="display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid #282828; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#1f1f1f'" onmouseout="this.style.background='transparent'">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #ea580c; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">B</div>
+                <div>
+                    <div style="font-weight: 500; color: #ffffff; font-size: 0.95rem;">Books for students</div>
+                    <div style="font-size: 0.82rem; color: #9aa0a6;">booksforstudent8@gmail.com</div>
+                </div>
+            </a>
+
+            <!-- Account 5 -->
+            <a href="/auth/google-login/?email=amanpoddar7282@gmail.com" style="display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid #282828; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#1f1f1f'" onmouseout="this.style.background='transparent'">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #d97706; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">A</div>
+                <div>
+                    <div style="font-weight: 500; color: #ffffff; font-size: 0.95rem;">Amam Poddar</div>
+                    <div style="font-size: 0.82rem; color: #9aa0a6;">amanpoddar7282@gmail.com</div>
+                </div>
+            </a>
+
+            <!-- Account 6 -->
+            <a href="/auth/google-login/?email=akp8102874885@gmail.com" style="display: flex; align-items: center; gap: 14px; padding: 12px 8px; border-bottom: 1px solid #282828; text-decoration: none; border-radius: 8px; transition: background 0.15s;" onmouseover="this.style.background='#1f1f1f'" onmouseout="this.style.background='transparent'">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #16a34a; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">A</div>
+                <div>
+                    <div style="font-weight: 500; color: #ffffff; font-size: 0.95rem;">Aman Kumar</div>
+                    <div style="font-size: 0.82rem; color: #9aa0a6;">akp8102874885@gmail.com</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function openGoogleAccountChooser() {
+    const m = document.getElementById('googleAccountModal');
+    if (m) m.style.display = 'flex';
+}
+function closeGoogleModal() {
+    const m = document.getElementById('googleAccountModal');
+    if (m) m.style.display = 'none';
+}
+</script>
+{% endblock %}

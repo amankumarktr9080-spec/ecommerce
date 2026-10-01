@@ -1,0 +1,51 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Payment Gateway & Transactions{% endblock %}
+{% block page_subtitle %}Live gateway transaction logs, UPI dynamic payments, and COD reconciliations{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-credit-card" style="color: var(--primary);"></i> Settled Transactions ({{ transactions|length }})
+        </h3>
+        <span class="badge badge-success" style="padding: 6px 14px; font-weight: 700;">
+            Total Paid: ₹{{ total_paid }}
+        </span>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Txn ID</th>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Gateway / Method</th>
+                    <th>Amount Paid</th>
+                    <th>Payment Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td><strong style="font-family: monospace; color: var(--primary);">{{ t.transaction_id }}</strong></td>
+                    <td><a href="/admin-panel/orders/{{ t.order.id }}/" style="font-weight: 600; color: var(--text-primary);">#{{ t.order.order_number }}</a></td>
+                    <td>{{ t.order.customer.get_full_name|default:t.order.customer.username }}</td>
+                    <td><span class="badge badge-info">{{ t.get_payment_method_display }}</span></td>
+                    <td><strong style="color: #10b981; font-size: 1rem;">₹{{ t.amount }}</strong></td>
+                    <td><span style="font-size: 0.85rem; color: var(--text-secondary);">{{ t.created_at|date:"d M Y, h:i A" }}</span></td>
+                    <td><span class="badge badge-{% if t.status == 'success' %}success{% else %}warning{% endif %}">{{ t.status|upper }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">No payment transactions logged.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery Partner Control Center{% endblock %}
+{% block page_subtitle %}Manage live trips, duty status, doorstep OTP verifications, and payouts{% endblock %}
+
+{% block panel_content %}
+<!-- Online / Offline Duty Switch Banner -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 20px; border-left: 6px solid {% if rider.is_online %}#10b981{% else %}#ef4444{% endif %};">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: {% if rider.is_online %}rgba(16, 185, 129, 0.15){% else %}rgba(239, 68, 68, 0.15){% endif %}; color: {% if rider.is_online %}#10b981{% else %}#ef4444{% endif %}; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+                <i class="fa-solid fa-motorcycle"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">
+                    Current Duty Status: 
+                    <span style="color: {% if rider.is_online %}#10b981{% else %}#ef4444{% endif %}; font-weight: 800;">
+                        {% if rider.is_online %}ONLINE (Available for assigned deliveries){% else %}OFFLINE (Duty Paused){% endif %}
+                    </span>
+                </h3>
+                <small style="color: var(--text-secondary);">Vehicle: <strong>{{ rider.vehicle_number|default:"Not provided" }}</strong> ({{ rider.get_vehicle_type_display }}) • Rating: <strong>{% if average_rating != None %}★ {{ average_rating|floatformat:1 }}{% else %}No ratings yet{% endif %}</strong></small>
+            </div>
+        </div>
+
+        <a href="/delivery/toggle-duty/" class="action-pill-btn" style="background: {% if rider.is_online %}#ef4444{% else %}#10b981{% endif %}; color: #fff; border: none; text-decoration: none; padding: 10px 22px; font-weight: 700;">
+            {% if rider.is_online %}
+                <i class="fa-solid fa-power-off"></i> Go Offline
+            {% else %}
+                <i class="fa-solid fa-circle-play"></i> Go Online
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<!-- KPI Metrics Grid -->
+<div class="kpi-grid">
+    <a href="/delivery/earnings/" class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Today's Earnings</span>
+            <h3>₹{{ today_earnings|floatformat:2 }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-arrow-up"></i> {{ today_deliveries }} Trips Completed</span>
+        </div>
+    </a>
+
+    <a href="/delivery/earnings/" class="kpi-card primary">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Total Lifetime Payout</span>
+            <h3>₹{{ total_earnings|floatformat:2 }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-circle-check"></i> {{ total_deliveries }} Total Trips</span>
+        </div>
+    </a>
+
+    <a href="/delivery/ratings/" class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-star"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Customer Rating</span>
+            <h3>{% if average_rating != None %}{{ average_rating|floatformat:1 }} ★{% else %}No ratings yet{% endif %}</h3>
+            <span class="kpi-trend"><i class="fa-solid fa-star"></i> Based on {{ rider.customer_ratings.count }} customer rating{{ rider.customer_ratings.count|pluralize }}</span>
+        </div>
+    </a>
+
+    <a href="/delivery/incentives/" class="kpi-card danger">
+        <div class="kpi-icon-wrap danger">
+            <i class="fa-solid fa-gift"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>This Week's Deliveries</span>
+            <h3>{{ week_deliveries }} trip{{ week_deliveries|pluralize }}</h3>
+            <span class="kpi-trend"><i class="fa-solid fa-indian-rupee-sign"></i> ₹{{ week_earnings|floatformat:2 }} earned this week</span>
+        </div>
+    </a>
+</div>
+
+<!-- Active Trip Alert Box (If in progress) -->
+{% if active_order %}
+<div class="glass-card" style="margin-bottom: 28px; padding: 24px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid rgba(79, 70, 229, 0.3);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <span class="role-badge admin" style="margin-bottom: 6px;">ACTIVE DELIVERY IN PROGRESS</span>
+            <h3 style="margin: 4px 0; font-size: 1.25rem; color: var(--text-primary);">
+                Order #{{ active_order.order_number }}
+            </h3>
+            <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary);">
+                Destination: <strong>{{ active_order.shipping_address|truncatechars:45 }}</strong> (Customer: {{ active_order.customer_name }})
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <a href="/delivery/active-delivery/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; text-decoration: none; padding: 12px 24px; font-weight: 700;">
+                <i class="fa-solid fa-route"></i> Open Active Controller
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Weekly Trips Performance Chart -->
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-chart-simple" style="color: #10b981;"></i> Weekly Deliveries & Trip Earnings
+    </h3>
+    <div style="height: 250px;">
+        <canvas id="riderEarningsChart"></canvas>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('riderEarningsChart');
+    if (ctx && typeof Chart !== 'undefined') {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Earnings (₹)',
+                        data: {{ chart_earnings|safe }},
+                        backgroundColor: '#10b981',
+                        borderRadius: 8
+                    },
+                    {
+                        type: 'line',
+                        label: 'Completed Trips',
+                        data: {{ chart_deliveries|safe }},
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        yAxisID: 'trips',
+                        tension: 0.35,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#cbd5e1' } } },
+                scales: {
+                    x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } },
+                    y: { beginAtZero: true, ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(148, 163, 184, 0.18)' } },
+                    trips: { position: 'right', beginAtZero: true, ticks: { color: '#a5b4fc', precision: 0 }, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

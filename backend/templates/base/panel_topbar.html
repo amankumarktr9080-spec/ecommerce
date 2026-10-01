@@ -1,0 +1,82 @@
+{% load static %}
+
+<header class="app-topbar">
+    <button type="button" class="mobile-sidebar-toggle" onclick="toggleMobileSidebar()" aria-label="Open navigation menu" title="Open navigation menu">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-left">
+        <a href="/" class="panel-topbar-brand" aria-label="ShopVerse home">
+            <span class="panel-topbar-brand-icon"><i class="fa-solid fa-bolt-lightning"></i></span>
+            <span>ShopVerse</span>
+        </a>
+    </div>
+
+    <!-- Search with Voice Recognition -->
+    <div class="topbar-search-box">
+        {% if current_panel == 'admin' %}
+        <form action="/admin-panel/search/" method="GET" data-suggestions-url="/admin-panel/search/" data-search-mode="admin" style="margin: 0; width: 100%; position: relative;">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="search" name="q" id="globalSearchInput" placeholder="Search orders, products, customers, sellers..." value="{{ request.GET.q|default:'' }}" autocomplete="off" aria-label="Search admin records">
+            <button type="button" class="voice-search-btn" id="voiceSearchBtn" title="Voice Search (Speak in Hindi or English)">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+        </form>
+        {% elif current_panel == 'delivery' %}
+        <form action="/delivery/active-delivery/" method="GET" data-suggestions-url="/delivery/active-delivery/" data-product-detail-url="/delivery/active-delivery/{id}/" data-search-mode="delivery" style="margin: 0; width: 100%; position: relative;">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="search" name="q" id="globalSearchInput" placeholder="Search assigned orders..." value="{{ request.GET.q|default:'' }}" autocomplete="off" aria-label="Search assigned deliveries">
+        </form>
+        {% else %}
+        <form action="{% if current_panel == 'seller' %}/seller/products/{% else %}/customer/search/{% endif %}" method="GET" data-suggestions-url="{% if current_panel == 'seller' %}/seller/products/{% else %}/customer/search/{% endif %}" data-product-detail-url="{% if current_panel == 'seller' %}/seller/products/{id}/{% else %}/customer/product/{id}/{% endif %}" data-product-search-url="{% if current_panel == 'seller' %}/seller/products/{% else %}/customer/products/{% endif %}" style="margin: 0; width: 100%; position: relative;">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="search" name="q" id="globalSearchInput" data-product-search placeholder="Search products, brands, deals..." data-i18n="search_placeholder" value="{{ request.GET.q|default:'' }}" autocomplete="off">
+            <button type="button" class="voice-search-btn" id="voiceSearchBtn" title="Voice Search (Speak in Hindi or English)">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+        </form>
+        {% endif %}
+        <div id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Search suggestions"></div>
+    </div>
+
+    <!-- Controls: Language, Theme, Wallet, Notifications, Profile -->
+    <div class="topbar-actions">
+        <a href="/" class="action-pill-btn panel-home-link" title="Go to home" aria-label="Go to home">
+            <i class="fa-solid fa-house"></i><span>Home</span>
+        </a>
+
+        <!-- Language Switcher -->
+        <button type="button" class="action-pill-btn" id="langToggleBtn" onclick="toggleLanguage()" title="Switch Language">
+            <i class="fa-solid fa-globe"></i> <span id="langLabel">English</span>
+        </button>
+
+        <!-- Dark / Light Mode -->
+        <button type="button" class="action-icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+            <i class="fa-solid fa-moon" id="themeIcon"></i>
+        </button>
+
+        <!-- E-Wallet Balance Pill -->
+        <a href="{% if current_panel == 'seller' or not current_panel and request.user.is_authenticated and request.user.role == 'seller' %}/seller/earnings/{% elif current_panel == 'delivery' or not current_panel and request.user.is_authenticated and request.user.role == 'delivery' %}/delivery/earnings/{% elif current_panel == 'admin' or not current_panel and request.user.is_authenticated and request.user.role == 'admin' %}/admin-panel/payments/{% else %}/customer/payments/{% endif %}" class="action-pill-btn wallet" title="{% if current_panel == 'seller' %}Available for payout; undelivered orders are shown as pending earnings{% else %}Your E-Wallet Balance{% endif %}">
+            <i class="fa-solid fa-wallet"></i>
+            <span>₹{% if current_panel == 'admin' %}{{ admin_wallet_balance|default_if_none:"0.00"|floatformat:2 }}{% else %}{{ wallet_balance|default_if_none:"0.00"|floatformat:2 }}{% endif %}</span>
+        </a>
+
+        {% if current_panel == 'customer' %}
+        <a href="/customer/cart/" class="action-icon-btn" title="My Cart" aria-label="My Cart" data-cart-count-link>
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span data-cart-count-badge data-cart-count="{{ cart_count }}" aria-label="{{ cart_count }} items in cart" {% if not cart_count %}hidden{% endif %} style="position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; font-size: 0.68rem; font-weight: 800; line-height: 1;">{{ cart_count }}</span>
+        </a>
+        {% endif %}
+
+        <!-- Notifications Bell -->
+        <a href="{% if current_panel == 'seller' %}/seller/notifications/{% elif current_panel == 'delivery' %}/delivery/notifications/{% elif current_panel == 'admin' %}/admin-panel/notifications/{% else %}/customer/notifications/{% endif %}" class="action-icon-btn" title="Notifications" style="position: relative;">
+            <i class="fa-regular fa-bell"></i>
+            {% if unread_notifications_count %}<span class="notification-badge-count" aria-label="{{ unread_notifications_count }} unread notifications" style="position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; font-size: 0.68rem; font-weight: 800; line-height: 1;">{{ unread_notifications_count }}</span>{% endif %}
+        </a>
+
+        <!-- Role-Specific Dynamic Profile Avatar Link -->
+        <a href="{% if current_panel == 'seller' or not current_panel and request.user.is_authenticated and request.user.role == 'seller' %}/seller/store/{% elif current_panel == 'delivery' or not current_panel and request.user.is_authenticated and request.user.role == 'delivery' %}/delivery/profile/{% elif current_panel == 'admin' or not current_panel and request.user.is_authenticated and request.user.role == 'admin' %}/admin-panel/settings/{% else %}/customer/profile/{% endif %}" style="text-decoration: none;" title="View My Profile">
+            <img src="{% if not request.user.is_authenticated or current_panel == 'customer' and request.user.role != 'customer' %}https://api.dicebear.com/7.x/avataaars/svg?seed=Guest{% else %}{{ request.user.avatar_url|default:'https://api.dicebear.com/7.x/avataaars/svg?seed=Aman' }}{% endif %}" 
+                 alt="User Profile" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+        </a>
+    </div>
+</header>

@@ -1,0 +1,183 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Executive Platform Overview{% endblock %}
+{% block page_subtitle %}Multi-panel system analytics, 10% platform commission revenue, order flow, and fleet operations{% endblock %}
+
+{% block panel_content %}
+<!-- KPI Stats Cards -->
+<div class="kpi-grid">
+    <a href="/admin-panel/commissions/" class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-percent"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Settled Admin Commission</span>
+            <h3>₹{{ total_commission }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-book"></i> Commission ledger total</span>
+        </div>
+    </a>
+
+    <a href="/admin-panel/orders/" class="kpi-card info">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Gross Merchandise Volume (GMV)</span>
+            <h3>₹{{ total_revenue }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-chart-line"></i> Merchandise subtotal, excluding cancelled/returned</span>
+        </div>
+    </a>
+
+    <a href="/admin-panel/orders/" class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Total Orders Placed</span>
+            <h3>{{ total_orders }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-truck-fast"></i> Orders across all statuses</span>
+        </div>
+    </a>
+
+    <a href="/admin-panel/customers/" class="kpi-card info">
+        <div class="kpi-icon-wrap info">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Registered Customers & Partners</span>
+            <h3>{{ total_customers }} Customers</h3>
+            <small style="color: var(--text-secondary);">{{ total_sellers }} Sellers • {{ total_riders }} Riders</small>
+        </div>
+    </a>
+</div>
+
+<!-- Financial Flow Tri-Party Split -->
+<div class="glass-card" style="padding: 24px; margin-bottom: 24px;">
+    <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="fa-solid fa-scale-balanced" style="color: var(--primary);"></i> 3-Way Earnings Summary
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+        <div style="padding: 16px; border-radius: 12px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2);">
+            <div style="font-size: 0.85rem; color: #10b981; font-weight: 700;">SETTLED ADMIN COMMISSION</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #10b981; margin: 4px 0;">₹{{ total_commission }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Enforced automatically on all product listings</div>
+        </div>
+
+        <div style="padding: 16px; border-radius: 12px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2);">
+            <div style="font-size: 0.85rem; color: var(--primary); font-weight: 700;">SELLERS NET EARNINGS</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 4px 0;">₹{{ total_seller_payout }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Seller net earnings on delivered orders</div>
+        </div>
+
+        <div style="padding: 16px; border-radius: 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);">
+            <div style="font-size: 0.85rem; color: #f59e0b; font-weight: 700;">DELIVERY FLEET PAYOUTS</div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: #f59e0b; margin: 4px 0;">₹{{ total_rider_payout }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Delivery earnings on delivered orders</div>
+        </div>
+    </div>
+</div>
+
+<!-- Operations Quick Grid -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Recent Orders -->
+    <div class="glass-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Recent Platform Orders
+            </h3>
+            <a href="/admin-panel/orders/" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>10% Comm.</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in recent_orders %}
+                    <tr>
+                        <td>
+                            <a href="/admin-panel/orders/{{ o.id }}/" style="color: var(--primary); font-weight: 700; text-decoration: none;">
+                                #{{ o.order_number }}
+                            </a>
+                        </td>
+                        <td>{{ o.customer.get_full_name|default:o.customer_name }}</td>
+                        <td><strong>₹{{ o.grand_total|floatformat:2 }}</strong></td>
+                        <td><span style="color: #10b981; font-weight: 700;">+₹{{ o.admin_commission_amount|floatformat:2 }}</span></td>
+                        <td>
+                            <span class="badge badge-{% if o.status == 'delivered' %}success{% elif o.status == 'cancelled' %}danger{% else %}info{% endif %}">
+                                {{ o.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">No recent orders.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Action Hub & Pending Approvals -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 18px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-user-plus" style="color: var(--primary);"></i> Partner Onboarding
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="/admin-panel/sellers/" class="glass-card" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; text-decoration: none; border-left: 4px solid var(--primary);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-store" style="font-size: 1.2rem; color: var(--primary);"></i>
+                    <div>
+                        <strong style="color: var(--text-primary); display: block;">Onboard New Seller</strong>
+                        <small style="color: var(--text-secondary);">Register vendor store & bank credentials</small>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+            </a>
+
+            <a href="/admin-panel/delivery-partners/" class="glass-card" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; text-decoration: none; border-left: 4px solid #f59e0b;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-motorcycle" style="font-size: 1.2rem; color: #f59e0b;"></i>
+                    <div>
+                        <strong style="color: var(--text-primary); display: block;">Onboard Delivery Rider</strong>
+                        <small style="color: var(--text-secondary);">Assign vehicle & delivery credentials</small>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+            </a>
+
+            <a href="/admin-panel/commissions/" class="glass-card" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; text-decoration: none; border-left: 4px solid #10b981;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-file-invoice-dollar" style="font-size: 1.2rem; color: #10b981;"></i>
+                    <div>
+                        <strong style="color: var(--text-primary); display: block;">Commission Ledger</strong>
+                        <small style="color: var(--text-secondary);">Audit 10% platform cuts & payouts</small>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+            </a>
+
+            <a href="/admin-panel/live-operations/" class="glass-card" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; text-decoration: none; border-left: 4px solid #ec4899;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-map-location-dot" style="font-size: 1.2rem; color: #ec4899;"></i>
+                    <div>
+                        <strong style="color: var(--text-primary); display: block;">Live Fleet Telemetry</strong>
+                        <small style="color: var(--text-secondary);">Real-time GPS tracking of active riders</small>
+                    </div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

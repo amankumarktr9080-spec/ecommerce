@@ -1,0 +1,187 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Brands Directory{% endblock %}
+{% block page_subtitle %}Manage brands within their product subcategories{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div class="glass-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-certificate" style="color: var(--primary);"></i> Listed Brands ({{ brands|length }})
+            </h3>
+            <form method="GET" class="brand-list-filter" style="display: flex; align-items: end; flex-wrap: wrap; gap: 8px;">
+                <label style="display: grid; gap: 4px; font-size: 0.8rem; color: var(--text-secondary);">Category
+                    <select name="category_id" class="brand-filter-category" aria-label="Filter brands by category" style="min-width: 155px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">All categories</option>
+                        {% for category in categories %}<option value="{{ category.id }}" {% if selected_category_id == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label style="display: grid; gap: 4px; font-size: 0.8rem; color: var(--text-secondary);">Subcategory
+                    <select name="subcategory_id" class="brand-filter-subcategory" aria-label="Filter brands by subcategory" style="min-width: 190px; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">All subcategories</option>
+                        {% for subcategory in subcategories %}<option value="{{ subcategory.id }}" data-category-id="{{ subcategory.category_id }}" {% if selected_subcategory_id == subcategory.id|stringformat:"s" %}selected{% endif %}>{{ subcategory.name }}</option>{% endfor %}
+                    </select>
+                </label>
+                {% if selected_category_id or selected_subcategory_id %}<a href="{% url 'admin_panel:brands' %}" class="btn btn-secondary btn-sm" title="Clear filters"><i class="fa-solid fa-xmark"></i></a>{% endif %}
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Brand Name</th>
+                        <th>Category / Subcategory</th>
+                        <th>Slug</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in brands %}
+                    <tr>
+                        <td><strong style="color: var(--text-primary);">{{ b.name }}</strong></td>
+                        <td>{% if b.subcategory %}{{ b.subcategory.category.name }} / {{ b.subcategory.name }}{% else %}Unassigned legacy brand{% endif %}</td>
+                        <td><span style="font-family: monospace; color: var(--text-secondary);">/{{ b.slug }}/</span></td>
+                        <td><span class="badge badge-success">Verified Brand</span></td>
+                        <td style="display: flex; gap: 6px; align-items: flex-start;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('editBrand{{ b.id }}').showModal()">Edit</button>
+                            <dialog id="editBrand{{ b.id }}" style="position: fixed; z-index: 3000; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-md);">
+                                <form method="POST" class="brand-taxonomy-form" style="display: grid; gap: 14px; padding: 22px;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="edit">
+                                    <input type="hidden" name="brand_id" value="{{ b.id }}">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                        <h3 style="margin: 0; font-size: 1.1rem;">Edit Brand</h3>
+                                        <button type="button" class="btn btn-secondary btn-sm" aria-label="Close" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                    <label>Category<select name="category_id" class="brand-category-select" required><option value="">Choose category</option>{% for category in categories %}<option value="{{ category.id }}" {% if b.subcategory.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></label>
+                                    <label>Subcategory<select name="subcategory_id" class="brand-subcategory-select" required><option value="">Choose subcategory</option>{% for subcategory in subcategories %}<option value="{{ subcategory.id }}" data-category-id="{{ subcategory.category_id }}" {% if b.subcategory_id == subcategory.id %}selected{% endif %}>{{ subcategory.name }}</option>{% endfor %}</select></label>
+                                    <label>Brand name<input type="text" name="name" value="{{ b.name }}" required></label>
+                                    <label>Slug<input type="text" name="slug" value="{{ b.slug }}" required></label>
+                                    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="this.closest('dialog').close()">Cancel</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                    </div>
+                                </form>
+                            </dialog>
+                            <form method="POST" onsubmit="return confirm('Delete this brand? Related products will remain but lose their brand.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="brand_id" value="{{ b.id }}">
+                                <button type="submit" class="btn btn-secondary btn-sm" title="Delete brand"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">No brands listed.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding: 24px; height: fit-content;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-plus" style="color: var(--primary);"></i> Add New Brand
+        </h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <div class="brand-taxonomy-form" style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Category *</label>
+                    <select name="category_id" class="brand-category-select" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Choose category</option>
+                        {% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Subcategory *</label>
+                    <select name="subcategory_id" class="brand-subcategory-select" required disabled style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="">Choose subcategory</option>
+                        {% for subcategory in subcategories %}<option value="{{ subcategory.id }}" data-category-id="{{ subcategory.category_id }}">{{ subcategory.name }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Brand Name *</label>
+                    <input type="text" name="name" required placeholder="e.g. Sony, Apple, Nike" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Slug (Optional)</label>
+                    <input type="text" name="slug" placeholder="e.g. sony" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div style="margin-top: 6px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-check"></i> Register Brand
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.querySelectorAll('.brand-list-filter').forEach((form) => {
+    const categorySelect = form.querySelector('.brand-filter-category');
+    const subcategorySelect = form.querySelector('.brand-filter-subcategory');
+    if (!categorySelect || !subcategorySelect) return;
+
+    const filterSubcategoryOptions = () => {
+        const categoryId = categorySelect.value;
+        const currentSubcategory = subcategorySelect.selectedOptions[0];
+        Array.from(subcategorySelect.options).forEach((option) => {
+            if (!option.value) return;
+            const matches = !categoryId || option.dataset.categoryId === categoryId;
+            option.hidden = !matches;
+            option.disabled = !matches;
+        });
+        if (currentSubcategory?.value && categoryId && currentSubcategory.dataset.categoryId !== categoryId) {
+            subcategorySelect.value = '';
+        }
+        subcategorySelect.dispatchEvent(new Event('optionschange'));
+    };
+
+    categorySelect.addEventListener('change', () => {
+        filterSubcategoryOptions();
+        form.requestSubmit();
+    });
+    subcategorySelect.addEventListener('change', () => form.requestSubmit());
+    filterSubcategoryOptions();
+});
+
+document.querySelectorAll('.brand-taxonomy-form').forEach((form) => {
+    const categorySelect = form.querySelector('.brand-category-select');
+    const subcategorySelect = form.querySelector('.brand-subcategory-select');
+    if (!categorySelect || !subcategorySelect) return;
+
+    const filterSubcategories = () => {
+        const selectedCategory = categorySelect.value;
+        const currentSubcategory = subcategorySelect.value;
+        Array.from(subcategorySelect.options).forEach((option) => {
+            if (!option.value) return;
+            const matches = option.dataset.categoryId === selectedCategory;
+            option.hidden = !matches;
+            option.disabled = !matches;
+        });
+        if (currentSubcategory && subcategorySelect.selectedOptions[0]?.dataset.categoryId !== selectedCategory) {
+            subcategorySelect.value = '';
+        }
+        subcategorySelect.disabled = !selectedCategory;
+        subcategorySelect.dispatchEvent(new Event('optionschange'));
+    };
+
+    categorySelect.addEventListener('change', () => {
+        subcategorySelect.value = '';
+        filterSubcategories();
+    });
+    filterSubcategories();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}My Delivery Addresses{% endblock %}
+{% block page_subtitle %}Manage your shipping destinations for faster checkout{% endblock %}
+
+{% block panel_content %}
+<div class="customer-addresses-layout" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; margin-bottom: 40px;">
+    <!-- Address List -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">Saved Addresses</h3>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for addr in addresses %}
+                <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <strong style="font-size: 0.95rem; color: var(--text-primary);">{{ addr.full_name }}</strong>
+                        <span class="role-badge customer">{{ addr.address_type|upper }}</span>
+                    </div>
+                    <p style="margin: 0 0 6px; font-size: 0.85rem; color: var(--text-secondary);">
+                        {{ addr.street_address }}, {{ addr.city }}, {{ addr.state }} - <strong>{{ addr.pincode }}</strong>
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted);">
+                        <span>Phone: {{ addr.phone }}</span>
+                        
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <button type="button" onclick="openEditAddressModal({{ addr.id }}, '{{ addr.full_name|escapejs }}', '{{ addr.phone|escapejs }}', '{{ addr.street_address|escapejs }}', '{{ addr.city|escapejs }}', '{{ addr.state|escapejs }}', '{{ addr.pincode|escapejs }}', '{{ addr.address_type|escapejs }}')"
+                                    style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; font-weight: 700;">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+
+                            <form method="POST" action="/customer/addresses/" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="address_id" value="{{ addr.id }}">
+                                <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+                                    <i class="fa-solid fa-trash-can"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="text-align: center; color: var(--text-muted); padding: 20px;">No saved addresses yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Add New Address Form -->
+    <div class="glass-card" style="padding: 24px; height: fit-content;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">
+            <i class="fa-solid fa-plus" style="color: var(--primary);"></i> Add New Address
+        </h3>
+        <form method="POST" action="/customer/addresses/" style="display: flex; flex-direction: column; gap: 12px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Full Name</label>
+                <input type="text" name="full_name" required placeholder="Aman Kumar"
+                       style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+            </div>
+
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Phone Number</label>
+                <input type="tel" name="phone" required placeholder="9876543210"
+                       style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+            </div>
+
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Street Address / Flat / Building</label>
+                <textarea name="street_address" rows="2" required placeholder="Flat 402, Block B, Connaught Place"
+                          style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">City</label>
+                    <input type="text" name="city" required placeholder="New Delhi"
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">Pincode</label>
+                    <input type="text" name="pincode" maxlength="6" required placeholder="110001"
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">State</label>
+                    <input type="text" name="state" required placeholder="Delhi"
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">Type</label>
+                    <select name="address_type" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                        <option value="home">Home</option>
+                        <option value="work">Work / Office</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" style="padding: 10px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.88rem; cursor: pointer; margin-top: 6px;">
+                Save Delivery Address
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Address -->
+<div id="editAddressModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="max-width: 500px; width: 100%; padding: 24px; background: var(--bg-surface); border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Edit Address Details
+            </h3>
+            <button type="button" onclick="document.getElementById('editAddressModal').style.display='none'" style="background: none; border: none; font-size: 1.2rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+        </div>
+
+        <form method="POST" action="/customer/addresses/" style="display: flex; flex-direction: column; gap: 12px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" id="editAddrId" name="address_id">
+
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Full Name</label>
+                <input type="text" id="editFullName" name="full_name" required
+                       style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+            </div>
+
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Phone Number</label>
+                <input type="tel" id="editPhone" name="phone" required
+                       style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+            </div>
+
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 600;">Street Address / Flat</label>
+                <textarea id="editStreet" name="street_address" rows="2" required
+                          style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">City</label>
+                    <input type="text" id="editCity" name="city" required
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">Pincode</label>
+                    <input type="text" id="editPincode" name="pincode" maxlength="6" required
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">State</label>
+                    <input type="text" id="editState" name="state" required
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600;">Type</label>
+                    <select id="editType" name="address_type" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.85rem;">
+                        <option value="home">Home</option>
+                        <option value="work">Work / Office</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" style="padding: 10px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.88rem; cursor: pointer; margin-top: 6px;">
+                Update Address Details
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditAddressModal(id, name, phone, street, city, state, pincode, type) {
+    document.getElementById('editAddrId').value = id;
+    document.getElementById('editFullName').value = name;
+    document.getElementById('editPhone').value = phone;
+    document.getElementById('editStreet').value = street;
+    document.getElementById('editCity').value = city;
+    document.getElementById('editState').value = state;
+    document.getElementById('editPincode').value = pincode;
+    document.getElementById('editType').value = type;
+    document.getElementById('editAddressModal').style.display = 'flex';
+}
+</script>
+{% endblock %}

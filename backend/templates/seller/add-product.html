@@ -1,0 +1,310 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Add New Product Listing{% endblock %}
+{% block page_subtitle %}List item with real-time 10% platform commission calculator & return terms{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 32px; max-width: 900px; margin: 0 auto 40px;">
+    
+    <form method="POST" action="/seller/products/add/" style="display: flex; flex-direction: column; gap: 24px;">
+        {% csrf_token %}
+
+        <!-- Product Basic Info -->
+        <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                1. General Information
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Product Title *</label>
+                    <input type="text" name="title" required placeholder="e.g. Sony Wireless Noise Cancelling Headphones"
+                           style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Category *</label>
+                        <select id="productCategorySelect" name="category_id" required style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                            <option value="">Choose a category first</option>
+                            {% for c in categories %}
+                                <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Subcategory</label>
+                        <select id="productSubcategorySelect" name="subcategory_id" disabled style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                            <option value="">Choose a category first</option>
+                            {% for subcategory in subcategories %}
+                                <option value="{{ subcategory.id }}" data-category-id="{{ subcategory.category_id }}">{{ subcategory.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Brand</label>
+                        <select id="productBrandSelect" name="brand_id" disabled style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                            <option value="">Choose a category first</option>
+                            {% for b in brands %}
+                                <option value="{{ b.id }}" data-category-id="{{ b.subcategory.category_id }}" data-subcategory-id="{{ b.subcategory_id }}">{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">1. Main Cover Image (URL or Select from Device Gallery) *</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input type="text" id="mainImageUrlInput" name="image_url" required placeholder="Paste image URL or pick from device gallery..."
+                               style="flex: 1; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+                        <label for="mainImageFileInput" class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                            <i class="fa-solid fa-folder-open"></i> Pick from Gallery
+                        </label>
+                        <input type="file" id="mainImageFileInput" accept="image/*" style="display: none;" onchange="handleMainImagePick(this)">
+                    </div>
+                    <div id="mainImagePreviewBox" style="margin-top: 8px; display: none;">
+                        <img id="mainImagePreviewImg" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid var(--primary);">
+                    </div>
+                </div>
+
+                <!-- 3 Gallery Images Picker -->
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
+                        <i class="fa-solid fa-images" style="color: var(--primary);"></i> 3 Additional Gallery Images (Optional)
+                    </label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                        <!-- Gallery Image 1 -->
+                        <div>
+                            <input type="text" id="gal1Input" name="gallery_url_1" placeholder="Gallery Image 1 URL"
+                                   style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.82rem; margin-bottom: 4px;">
+                            <label for="gal1File" style="display: block; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
+                                <i class="fa-solid fa-paperclip"></i> Pick Image 1
+                            </label>
+                            <input type="file" id="gal1File" accept="image/*" style="display: none;" onchange="handleGalPick(this, 'gal1Input', 'gal1Prev')">
+                            <img id="gal1Prev" style="display: none; width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-top: 4px;">
+                        </div>
+                        <!-- Gallery Image 2 -->
+                        <div>
+                            <input type="text" id="gal2Input" name="gallery_url_2" placeholder="Gallery Image 2 URL"
+                                   style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.82rem; margin-bottom: 4px;">
+                            <label for="gal2File" style="display: block; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
+                                <i class="fa-solid fa-paperclip"></i> Pick Image 2
+                            </label>
+                            <input type="file" id="gal2File" accept="image/*" style="display: none;" onchange="handleGalPick(this, 'gal2Input', 'gal2Prev')">
+                            <img id="gal2Prev" style="display: none; width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-top: 4px;">
+                        </div>
+                        <!-- Gallery Image 3 -->
+                        <div>
+                            <input type="text" id="gal3Input" name="gallery_url_3" placeholder="Gallery Image 3 URL"
+                                   style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.82rem; margin-bottom: 4px;">
+                            <label for="gal3File" style="display: block; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 600;">
+                                <i class="fa-solid fa-paperclip"></i> Pick Image 3
+                            </label>
+                            <input type="file" id="gal3File" accept="image/*" style="display: none;" onchange="handleGalPick(this, 'gal3Input', 'gal3Prev')">
+                            <img id="gal3Prev" style="display: none; width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-top: 4px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Product Description</label>
+                    <textarea name="description" rows="3" placeholder="Key highlights, materials, package items..."
+                              style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing & 10% Commission Live Calculator -->
+        <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                2. Pricing & 10% Platform Commission Calculator
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
+                        Seller Base Cost / Your Net Earning (₹) *
+                    </label>
+                    <input type="number" id="sellerBasePrice" name="base_price" value="1000" min="1" step="1" required oninput="calculateListingPrice()"
+                           style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 1rem; font-weight: 700;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
+                        Delivery Charge (₹)
+                    </label>
+                    <input type="number" id="sellerDeliveryFee" name="delivery_charge" value="50" min="0" step="5" required oninput="calculateListingPrice()"
+                           style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 1rem;">
+                </div>
+            </div>
+
+            <!-- LIVE FORMULA BREAKDOWN BOX -->
+            <div style="padding: 20px; background: rgba(79, 70, 229, 0.08); border: 2px dashed rgba(79, 70, 229, 0.4); border-radius: 14px;">
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 12px;">
+                    <i class="fa-solid fa-calculator"></i> Real-Time Customer Pricing Breakdown:
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Your Net Earnings (Seller):</span>
+                        <strong id="calcBase">₹1,000.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #f59e0b;">
+                        <span>Admin Platform Commission (10%):</span>
+                        <strong id="calcComm">+ ₹100.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #10b981;">
+                        <span>Delivery Partner Charge:</span>
+                        <strong id="calcDel">+ ₹50.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
+                        <span>Applicable GST / Tax (5%):</span>
+                        <strong id="calcTax">+ ₹50.00</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(79, 70, 229, 0.3); padding-top: 10px; font-size: 1.15rem; color: var(--primary);">
+                        <strong>Final Price Displayed to Customer:</strong>
+                        <strong id="calcTotal" style="font-size: 1.4rem;">₹1,200.00</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory & Stock -->
+        <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                3. Stock & Inventory Units
+            </h3>
+            <div>
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Available Quantity in Stock *</label>
+                <input type="number" name="stock" value="25" min="1" required
+                       style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 0.9rem;">
+            </div>
+        </div>
+
+        <!-- Return & Replacement Settings (Seller Configurable) -->
+        <div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                4. Return & Replacement Policies
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Return Settings -->
+                <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; margin-bottom: 10px;">
+                        <input type="checkbox" name="is_returnable" checked style="width: 18px; height: 18px;">
+                        <span>Enable Return & Refund Option</span>
+                    </label>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Return Window (Days)</label>
+                    <input type="number" name="return_window_days" value="7" min="1" max="30"
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                </div>
+
+                <!-- Replacement Settings -->
+                <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; margin-bottom: 10px;">
+                        <input type="checkbox" name="is_replaceable" checked style="width: 18px; height: 18px;">
+                        <span>Enable Free Replacement Option</span>
+                    </label>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Replacement Window (Days)</label>
+                    <input type="number" name="replacement_window_days" value="7" min="1" max="30"
+                           style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary);">
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" style="padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Publish Product with Unique Code
+        </button>
+    </form>
+</div>
+
+<script>
+function calculateListingPrice() {
+    const base = parseFloat(document.getElementById('sellerBasePrice').value) || 0;
+    const del = parseFloat(document.getElementById('sellerDeliveryFee').value) || 0;
+
+    const comm = Math.round(base * 0.10 * 100) / 100;
+    const tax = Math.round(base * 0.05 * 100) / 100;
+    const total = base + comm + del + tax;
+
+    document.getElementById('calcBase').textContent = `₹${base.toFixed(2)}`;
+    document.getElementById('calcComm').textContent = `+ ₹${comm.toFixed(2)}`;
+    document.getElementById('calcDel').textContent = `+ ₹${del.toFixed(2)}`;
+    document.getElementById('calcTax').textContent = `+ ₹${tax.toFixed(2)}`;
+    document.getElementById('calcTotal').textContent = `₹${total.toFixed(2)}`;
+}
+
+function handleMainImagePick(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('mainImageUrlInput').value = e.target.result;
+            document.getElementById('mainImagePreviewImg').src = e.target.result;
+            document.getElementById('mainImagePreviewBox').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function handleGalPick(input, inputId, prevId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(inputId).value = e.target.result;
+            const img = document.getElementById(prevId);
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+const productSubcategoryOptions = Array.from(document.getElementById('productSubcategorySelect').options).slice(1).map(option => option.cloneNode(true));
+const productBrandOptions = Array.from(document.getElementById('productBrandSelect').options).slice(1).map(option => option.cloneNode(true));
+
+function filterProductTaxonomy() {
+    const categorySelect = document.getElementById('productCategorySelect');
+    const subcategorySelect = document.getElementById('productSubcategorySelect');
+    const brandSelect = document.getElementById('productBrandSelect');
+    const categoryId = categorySelect.value;
+
+    const selectedSubcategoryId = subcategorySelect.value;
+    const matchingSubcategories = productSubcategoryOptions.filter(option => option.dataset.categoryId === categoryId);
+    subcategorySelect.replaceChildren(new Option(
+        !categoryId ? 'Choose a category first' : matchingSubcategories.length ? 'Choose a subcategory' : 'No subcategory available for this category',
+        ''
+    ));
+    matchingSubcategories.forEach(option => subcategorySelect.add(option.cloneNode(true)));
+    if (matchingSubcategories.some(option => option.value === selectedSubcategoryId)) {
+        subcategorySelect.value = selectedSubcategoryId;
+    }
+    subcategorySelect.disabled = !categoryId || matchingSubcategories.length === 0;
+
+    const subcategoryId = subcategorySelect.value;
+    const matchingBrands = productBrandOptions.filter(option =>
+        option.dataset.categoryId === categoryId && option.dataset.subcategoryId === subcategoryId
+    );
+    let brandPlaceholder = 'Choose a subcategory first';
+    if (categoryId) {
+        if (!subcategoryId) brandPlaceholder = 'Choose a subcategory first';
+        else brandPlaceholder = matchingBrands.length ? 'Choose a brand' : 'No brands available for this subcategory';
+    }
+    brandSelect.replaceChildren(new Option(brandPlaceholder, ''));
+    matchingBrands.forEach(option => brandSelect.add(option.cloneNode(true)));
+    brandSelect.disabled = !categoryId || !subcategoryId || matchingBrands.length === 0;
+    subcategorySelect.dispatchEvent(new Event('optionschange'));
+    brandSelect.dispatchEvent(new Event('optionschange'));
+}
+
+document.getElementById('productCategorySelect')?.addEventListener('change', () => {
+    document.getElementById('productSubcategorySelect').value = '';
+    document.getElementById('productBrandSelect').value = '';
+    filterProductTaxonomy();
+});
+document.getElementById('productSubcategorySelect')?.addEventListener('change', () => {
+    document.getElementById('productBrandSelect').value = '';
+    filterProductTaxonomy();
+});
+filterProductTaxonomy();
+</script>
+{% endblock %}

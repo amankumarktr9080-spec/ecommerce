@@ -1,0 +1,63 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Bank Account & Payout Setup{% endblock %}
+{% block page_subtitle %}Add or edit your payout account details{% endblock %}
+
+{% block panel_content %}
+<div style="max-width: 650px;">
+    <div class="glass-card" style="padding: 28px;">
+        {% if not bank_form_open %}
+            <h3 style="margin: 0 0 18px; font-size: 1.1rem; color: var(--text-primary);">Payout Bank Details</h3>
+            {% if has_payout_details %}
+                <dl style="display: grid; grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1.3fr); gap: 12px; margin: 0 0 22px;">
+                    <dt style="color: var(--text-muted);">Bank</dt><dd style="margin: 0; color: var(--text-primary);">{{ rider.bank_name }}</dd>
+                    <dt style="color: var(--text-muted);">Account</dt><dd style="margin: 0; color: var(--text-primary);">****{{ rider.account_number|slice:"-4:" }}</dd>
+                    <dt style="color: var(--text-muted);">IFSC</dt><dd style="margin: 0; color: var(--text-primary);">{{ rider.ifsc_code }}</dd>
+                    <dt style="color: var(--text-muted);">UPI ID</dt><dd style="margin: 0; color: var(--text-primary);">{{ rider.upi_id }}</dd>
+                </dl>
+                <a href="?edit=1" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Bank Details
+                </a>
+            {% else %}
+                <p style="margin: 0 0 18px; color: var(--text-secondary);">No payout bank details have been added.</p>
+                <a href="?edit=1" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <i class="fa-solid fa-plus"></i> Add Bank Details
+                </a>
+            {% endif %}
+        {% else %}
+            <h3 style="margin: 0 0 20px; font-size: 1.1rem; color: var(--text-primary);">
+                {% if has_payout_details %}Edit Bank Details{% else %}Add Bank Details{% endif %}
+            </h3>
+            <form method="POST" action="/delivery/bank/">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label for="bankName" style="display: block; margin-bottom: 6px; color: var(--text-secondary);">Bank Name</label>
+                        <input id="bankName" type="text" name="bank_name" value="{{ bank_values.bank_name }}" maxlength="100" required autocomplete="organization" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label for="accountNumber" style="display: block; margin-bottom: 6px; color: var(--text-secondary);">Bank Account Number</label>
+                        <input id="accountNumber" type="text" name="account_number" value="{{ bank_values.account_number }}" maxlength="50" required autocomplete="off" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label for="ifscCode" style="display: block; margin-bottom: 6px; color: var(--text-secondary);">IFSC Code</label>
+                        <input id="ifscCode" type="text" name="ifsc_code" value="{{ bank_values.ifsc_code }}" maxlength="20" required autocomplete="off" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); text-transform: uppercase;">
+                    </div>
+                    <div>
+                        <label for="upiId" style="display: block; margin-bottom: 6px; color: var(--text-secondary);">UPI ID</label>
+                        <input id="upiId" type="text" name="upi_id" value="{{ bank_values.upi_id }}" maxlength="50" required autocomplete="off" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <small style="display: block; margin-top: 5px; color: var(--text-muted);">Supports Google Pay, PhonePe, Paytm and BHIM.</small>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 4px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: 700;">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Bank Details
+                        </button>
+                        <a href="/delivery/bank/" class="btn btn-secondary" style="display: inline-flex; align-items: center; text-decoration: none;">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

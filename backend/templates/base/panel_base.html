@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var savedTheme = localStorage.getItem('ecom_theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', savedTheme || (prefersDark ? 'dark' : 'light'));
+        }());
+    </script>
+    <title>{% block title %}ShopVerse - Next-Gen E-Commerce{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Leaflet Maps CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Chart.js must load before panel-specific chart initialization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Modern Design System -->
+    <link rel="stylesheet" href="{% static 'css/modern_ecommerce.css' %}?v=20260929-2">
+    <link rel="stylesheet" href="{% static 'css/brand-theme.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-role="{{ current_panel|default:'customer' }}">
+
+    <div class="app-wrapper">
+        <!-- Persistent Role Sidebar (Matching Provided Structure) -->
+        {% include "base/panel_sidebar.html" %}
+
+        <!-- Main Workspace -->
+        <div class="app-main">
+            <!-- Glass Header Topbar -->
+            {% include "base/panel_topbar.html" %}
+
+            <!-- Dynamic Messages -->
+            {% if messages %}
+                <div style="padding: 16px 28px 0;">
+                    {% for message in messages %}
+                        <div class="toast-msg {% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" style="animation: none; margin-bottom: 8px;">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Viewport Content -->
+            <main class="app-content">
+                {% block panel_content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- AI Chatbot (Embedded in all 4 panels) -->
+    {% include "base/ai_chatbot.html" %}
+
+    <dialog id="imageViewerDialog" class="image-viewer-dialog" aria-label="Image preview">
+        <button type="button" id="imageViewerClose" class="image-viewer-close" aria-label="Close image preview" title="Close">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="imageViewerContent" alt="">
+    </dialog>
+
+    <!-- Leaflet Maps JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Modern JS Engine -->
+    <script src="{% static 'js/modern_ecommerce.js' %}?v=13"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

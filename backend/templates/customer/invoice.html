@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Invoice #{{ order.order_number }} - ShopVerse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: #f8fafc; color: #0f172a; padding: 40px 20px; font-size: 14px; }
+        .invoice-card { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+        .invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid #4f46e5; padding-bottom: 24px; margin-bottom: 24px; }
+        .invoice-title h1 { font-size: 24px; font-weight: 800; color: #4f46e5; }
+        .invoice-meta { text-align: right; font-size: 13px; color: #64748b; }
+        .address-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; font-size: 13px; line-height: 1.6; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px; }
+        .invoice-table th { background: #f1f5f9; padding: 10px 14px; text-align: left; font-weight: 700; border-bottom: 1px solid #cbd5e1; }
+        .invoice-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; }
+        .summary-box { display: flex; justify-content: flex-end; margin-bottom: 30px; }
+        .summary-table { width: 320px; border-collapse: collapse; font-size: 13px; }
+        .summary-table td { padding: 8px 12px; }
+        .summary-table tr.total td { font-size: 16px; font-weight: 800; color: #4f46e5; border-top: 2px solid #4f46e5; }
+        .footer-note { border-top: 1px solid #e2e8f0; padding-top: 18px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #64748b; }
+        .print-btn { padding: 10px 24px; background: #4f46e5; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .invoice-card { box-shadow: none; border: none; padding: 0; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div style="max-width: 800px; margin: 0 auto 20px; display: flex; justify-content: space-between;" class="no-print">
+    <a href="javascript:history.back()" style="color: #4f46e5; text-decoration: none; font-weight: 600;">← Back to Orders</a>
+    <button class="print-btn" onclick="window.print()">Print / Download PDF</button>
+</div>
+
+<div class="invoice-card">
+    <div class="invoice-header">
+        <div class="invoice-title">
+            <h1>ShopVerse Logistics</h1>
+            <p style="font-size: 12px; color: #64748b; margin-top: 4px;">TAX INVOICE / BILL OF SUPPLY</p>
+            <p style="font-size: 12px; color: #64748b;">GSTIN: {{ gstin }}</p>
+        </div>
+        <div class="invoice-meta">
+            <h3 style="color: #0f172a; margin-bottom: 4px;">Invoice #INV-{{ order.order_number }}</h3>
+            <p>Order ID: <strong>{{ order.order_number }}</strong></p>
+            <p>Invoice Date: <strong>{{ order.created_at|date:"d M Y" }}</strong></p>
+            <p>Payment Mode: <strong>{{ order.payment_method|upper }} ({{ order.payment_status|upper }})</strong></p>
+        </div>
+    </div>
+
+    <div class="address-grid">
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <strong style="color: #4f46e5; text-transform: uppercase; font-size: 11px;">Sold By (Vendor):</strong>
+            <h4 style="margin: 4px 0 2px;">{{ order.seller.store_name }}</h4>
+            <p>{{ order.seller.business_address }}</p>
+            <p>Email: {{ order.seller.email }} | GSTIN: {{ order.seller.gst_number|default:"07AAAAA0000A1Z5" }}</p>
+        </div>
+
+        <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <strong style="color: #10b981; text-transform: uppercase; font-size: 11px;">Billed & Shipped To (Customer):</strong>
+            <h4 style="margin: 4px 0 2px;">{{ order.customer_name }}</h4>
+            <p>{{ order.shipping_address }}</p>
+            <p>Phone: {{ order.customer_phone }}</p>
+        </div>
+    </div>
+
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th>Item Code</th>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>GST Rate</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+                <tr>
+                    <td><code>{{ item.product.item_code }}</code></td>
+                    <td>
+                        <strong>{{ item.product.title }}</strong><br>
+                        <small style="color: #64748b;">SKU: {{ item.product.sku }}</small>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.unit_price }}</td>
+                    <td>5%</td>
+                    <td><strong>₹{{ item.total_price }}</strong></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-box">
+        <table class="summary-table">
+            <tr>
+                <td style="color: #64748b;">Items Subtotal:</td>
+                <td style="text-align: right; font-weight: 600;">₹{{ order.subtotal }}</td>
+            </tr>
+            <tr>
+                <td style="color: #64748b;">Shipping & Delivery Charge:</td>
+                <td style="text-align: right; font-weight: 600;">₹{{ order.delivery_charge }}</td>
+            </tr>
+            <tr>
+                <td style="color: #64748b;">Tax / GST (5%):</td>
+                <td style="text-align: right; font-weight: 600;">₹{{ order.tax }}</td>
+            </tr>
+            {% if order.coupon_discount > 0 %}
+                <tr style="color: #059669;">
+                    <td>Coupon Discount:</td>
+                    <td style="text-align: right; font-weight: 600;">- ₹{{ order.coupon_discount }}</td>
+                </tr>
+            {% endif %}
+            <tr class="total">
+                <td>Grand Total:</td>
+                <td style="text-align: right;">₹{{ order.grand_total }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer-note">
+        <div>
+            <p>This is a computer-generated tax invoice and requires no physical signature.</p>
+            <p>Return & Replacement window valid as per seller policy terms.</p>
+        </div>
+        <div style="text-align: right;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=ShopVerse-Invoice-{{ order.order_number }}" alt="QR" style="width: 60px; height: 60px;">
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

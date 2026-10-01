@@ -1,0 +1,102 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Returns, Replacements & Dispute Resolution{% endblock %}
+{% block page_subtitle %}Review customer return and exchange claims, examine proof photos, and issue wallet refunds{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-rotate-left" style="color: var(--primary);"></i> Return & Replacement Claims ({{ returns|length }})
+        </h3>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Claim #</th>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Refund Amount</th>
+                    <th>Customer Reason</th>
+                    <th>Status</th>
+                    <th>Admin Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in returns %}
+                <tr>
+                    <td>#{{ r.id }}</td>
+                    <td>
+                        <strong style="color: var(--primary);">#{{ r.order.order_number }}</strong>
+                    </td>
+                    <td>
+                        <span>{{ r.customer.get_full_name|default:r.customer.username }}</span>
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-primary);">{{ r.order.items.first.product.title|truncatechars:28 }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if r.request_type == 'return' %}warning{% else %}info{% endif %}">
+                            {{ r.get_request_type_display|upper }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong style="color: #10b981; font-size: 1rem;">₹{{ r.refund_amount }}</strong>
+                    </td>
+                    <td style="max-width: 220px; font-size: 0.85rem; color: var(--text-secondary);">
+                        {{ r.reason }}
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if r.status == 'refund_processed' %}success{% elif r.status == 'rejected' %}danger{% elif r.status == 'approved' %}info{% else %}warning{% endif %}">
+                            {{ r.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="POST" style="display: flex; gap: 6px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="return_id" value="{{ r.id }}">
+                            {% if r.status == 'pending' %}
+                            <button type="submit" name="action" value="approve" class="btn btn-secondary btn-sm" title="Approve Return Request" style="color: var(--primary);">
+                                <i class="fa-solid fa-check"></i> Approve
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn btn-secondary btn-sm" title="Reject Claim" style="color: #ef4444;">
+                                <i class="fa-solid fa-xmark"></i> Reject
+                            </button>
+                            {% elif r.status == 'approved' %}
+                            <select name="pickup_partner_id" class="form-control"><option value="">Choose rider</option>{% for partner in pickup_partners %}<option value="{{ partner.id }}">{{ partner.user.username }}</option>{% endfor %}</select>
+                            <input type="text" name="pickup_tracking_id" placeholder="Manual pickup ref" class="form-control">
+                            <button type="submit" name="action" value="schedule_pickup" class="btn btn-primary btn-sm">Schedule Pickup</button>
+                            {% elif r.status == 'pickup_scheduled' %}
+                            <button type="submit" name="action" value="picked_up" class="btn btn-primary btn-sm">Confirm Pickup</button>
+                            {% elif r.status == 'item_picked_up' %}
+                            <button type="submit" name="action" value="inspect_pass" class="btn btn-primary btn-sm">Inspection Passed</button>
+                            <button type="submit" name="action" value="inspect_fail" class="btn btn-secondary btn-sm">Inspection Failed</button>
+                            {% elif r.status == 'inspection_passed' and r.request_type == 'return' %}
+                            <button type="submit" name="action" value="refund" class="btn btn-primary btn-sm" title="Credit Refund to Customer Wallet">
+                                <i class="fa-solid fa-wallet"></i> Process Refund
+                            </button>
+                            {% elif r.status == 'inspection_passed' and r.request_type == 'replace' %}
+                            <button type="submit" name="action" value="replace" class="btn btn-primary btn-sm">Dispatch Replacement</button>
+                            {% elif r.status == 'replacement_failed' %}
+                            <button type="submit" name="action" value="replacement_refund" class="btn btn-primary btn-sm">Issue Wallet Refund</button>
+                            {% else %}
+                            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Resolved</span>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 40px;">No return or replacement claims pending.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

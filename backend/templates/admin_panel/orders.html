@@ -1,0 +1,98 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Order Management & Audit{% endblock %}
+{% block page_subtitle %}Comprehensive view of all customer orders, OTP verification codes, and financial distribution{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Platform Orders ({{ orders|length }})
+        </h3>
+
+        <!-- Status Filter Tabs -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/admin-panel/orders/" class="btn btn-{% if not status_filter %}primary{% else %}secondary{% endif %} btn-sm">All</a>
+            <a href="/admin-panel/orders/?status=placed" class="btn btn-{% if status_filter == 'placed' %}primary{% else %}secondary{% endif %} btn-sm">Placed</a>
+            <a href="/admin-panel/orders/?status=processing" class="btn btn-{% if status_filter == 'processing' %}primary{% else %}secondary{% endif %} btn-sm">Processing</a>
+            <a href="/admin-panel/orders/?status=out_for_delivery" class="btn btn-{% if status_filter == 'out_for_delivery' %}primary{% else %}secondary{% endif %} btn-sm">Out for Delivery</a>
+            <a href="/admin-panel/orders/?status=delivered" class="btn btn-{% if status_filter == 'delivered' %}primary{% else %}secondary{% endif %} btn-sm">Delivered</a>
+            <a href="/admin-panel/orders/?status=cancelled" class="btn btn-{% if status_filter == 'cancelled' %}primary{% else %}secondary{% endif %} btn-sm">Cancelled</a>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
+                    <th>10% Comm.</th>
+                    <th>Payment</th>
+                    <th>Delivery OTP</th>
+                    <th>Rider Assigned</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary); font-family: monospace;">#{{ o.order_number }}</strong>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ o.customer.get_full_name|default:o.customer.username }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ o.created_at|date:"d M Y, h:i A" }}</span>
+                    </td>
+                    <td>
+                        <strong>₹{{ o.grand_total }}</strong>
+                    </td>
+                    <td>
+                        <span style="color: #10b981; font-weight: 700;">+₹{{ o.admin_commission_amount }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if o.payment_status == 'paid' %}success{% else %}warning{% endif %}">
+                            {{ o.get_payment_method_display }} ({{ o.payment_status|upper }})
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-family: monospace; font-weight: 800;">
+                            {{ o.delivery_otp }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if o.delivery_partner %}
+                        <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600;">
+                            <i class="fa-solid fa-motorcycle" style="color: #f59e0b;"></i> {{ o.delivery_partner.user.get_full_name|default:o.delivery_partner.user.username }}
+                        </span>
+                        {% else %}
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if o.status == 'delivered' %}success{% elif o.status == 'cancelled' %}danger{% elif o.status == 'out_for_delivery' %}warning{% else %}info{% endif %}">
+                            {{ o.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/admin-panel/orders/{{ o.id }}/" class="btn btn-secondary btn-sm" title="View Order Details & Timeline">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px;">No orders matching current filter.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

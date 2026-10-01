@@ -1,0 +1,75 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Platform Performance Analytics{% endblock %}
+{% block page_subtitle %}Visual metrics on sales volume, 10% platform cuts, order completion velocity, and user cohorts{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Revenue & 10% Commission Velocity
+        </h3>
+        <canvas id="adminRevenueChart" height="240"></canvas>
+    </div>
+
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-pie" style="color: #10b981;"></i> Order Status Breakdown
+        </h3>
+        <canvas id="adminOrderDonut" height="240"></canvas>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof Chart !== 'undefined') {
+        const revCtx = document.getElementById('adminRevenueChart').getContext('2d');
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [
+                    {
+                        label: 'Gross GMV (₹)',
+                        data: [12500, 24800, 38500, 52000],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: '10% Platform Commission (₹)',
+                        data: [1250, 2480, 3850, 5200],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        const donutCtx = document.getElementById('adminOrderDonut').getContext('2d');
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Delivered', 'Out for Delivery', 'Processing', 'Cancelled'],
+                datasets: [{
+                    data: [65, 18, 12, 5],
+                    backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

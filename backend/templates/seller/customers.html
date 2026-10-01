@@ -1,0 +1,69 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Store Customers & Buyer Directory{% endblock %}
+{% block page_subtitle %}Customers who have placed orders with your store{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-users" style="color: var(--primary);"></i> Your Store Customers
+        </h3>
+        <span class="badge badge-success">{{ customers|length }} Buyers</span>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Email Address</th>
+                    <th>Phone Number</th>
+                    <th>Total Orders</th>
+                    <th>Total Spent</th>
+                    <th>Last Order Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+                                {{ customer.first_name|default:customer.username|first|upper }}
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-primary); display: block;">{{ customer.get_full_name|default:customer.username }}</strong>
+                                {% if customer.total_orders > 1 %}
+                                    <small style="color: #10b981; font-weight: 600;">Repeat Buyer</small>
+                                {% else %}
+                                    <small style="color: var(--text-muted);">Customer</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color: var(--text-secondary);">{{ customer.email|default:"Not provided" }}</td>
+                    <td style="font-family: monospace;">{{ customer.phone|default:"Not provided" }}</td>
+                    <td><strong style="color: var(--primary);">{{ customer.total_orders }} Order{{ customer.total_orders|pluralize }}</strong></td>
+                    <td><strong style="color: #10b981;">₹{{ customer.total_spent|default_if_none:"0.00"|floatformat:2 }}</strong></td>
+                    <td style="color: var(--text-secondary);">{{ customer.last_order_date|date:"d M Y" }}</td>
+                    <td>
+                        {% if customer.phone %}
+                            <a href="tel:{{ customer.phone }}" class="btn btn-secondary btn-sm"><i class="fa-solid fa-phone"></i> Contact</a>
+                        {% else %}
+                            <span style="color: var(--text-muted);">No phone</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">No customers have ordered from your store yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

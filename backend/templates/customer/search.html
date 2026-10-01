@@ -1,0 +1,25 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Voice & Text Product Search{% endblock %}
+{% block page_subtitle %}Search catalog by item code, title, brand, or voice microphone command{% endblock %}
+
+{% block panel_content %}
+<div style="max-width: 900px; margin: 0 auto 40px;">
+    <div class="glass-card" style="padding: 24px; margin-bottom: 28px;">
+        <form method="GET" action="/customer/products/" style="display: flex; gap: 12px; align-items: center; position: relative;">
+            <input type="search" name="q" data-product-search value="{{ search_query }}" placeholder="Search products, SKU, category, brand..." autocomplete="off"
+                   style="flex: 1; padding: 14px 45px 14px 16px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-app); color: var(--text-primary); font-size: 1rem;">
+            
+            <!-- Right-aligned voice search mic icon inside input -->
+            <button type="button" onclick="startVoiceSearch()" title="Click to Speak Voice Search" style="position: absolute; right: 140px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--primary); font-size: 1.1rem; cursor: pointer; padding: 6px;">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+
+            <button type="submit" class="btn btn-primary" style="padding: 14px 24px;">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

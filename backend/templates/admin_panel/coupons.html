@@ -1,0 +1,143 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Coupons & Promotional Codes{% endblock %}
+{% block page_subtitle %}Manage checkout discount voucher codes, minimum spend criteria, and percentage reductions{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Coupons List -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-ticket" style="color: var(--primary);"></i> Active Promotional Coupons ({{ coupons|length }})
+        </h3>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Voucher Code</th>
+                        <th>Type</th>
+                        <th>Discount Value</th>
+                        <th>Min Order</th>
+                        <th>Usage Count</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cp in coupons %}
+                    <tr>
+                        <td>
+                            <strong style="font-family: monospace; font-size: 1rem; color: var(--primary); letter-spacing: 1px;">{{ cp.code }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">{{ cp.get_discount_type_display }}</span>
+                        </td>
+                        <td>
+                            <strong style="color: #10b981; font-size: 1rem;">
+                                {% if cp.discount_type == 'percent' %}{{ cp.discount_value }}% OFF{% else %}₹{{ cp.discount_value }} FLAT{% endif %}
+                            </strong>
+                        </td>
+                        <td>₹{{ cp.min_order_amount }}</td>
+                        <td>
+                            {% if cp.max_uses %}
+                                {{ cp.used_count }} / {{ cp.max_uses }}
+                            {% else %}
+                                {{ cp.used_count }} / ∞
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{% if cp.is_active %}success{% else %}danger{% endif %}">
+                                {% if cp.is_active %}Active{% else %}Expired{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('editCoupon{{ cp.id }}').showModal()">Edit</button>
+                                <dialog id="editCoupon{{ cp.id }}" style="position: fixed; z-index: 3000; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 0; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-md);">
+                                    <form method="POST" style="display: grid; gap: 14px; padding: 22px;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="coupon_id" value="{{ cp.id }}">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                            <h3 style="margin: 0; font-size: 1.1rem;">Edit Coupon</h3>
+                                            <button type="button" class="btn btn-secondary btn-sm" aria-label="Close" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                        <label>Code<input type="text" name="code" value="{{ cp.code }}" required></label>
+                                        <label>Discount Type<select name="discount_type"><option value="percent" {% if cp.discount_type == 'percent' %}selected{% endif %}>Percentage</option><option value="flat" {% if cp.discount_type == 'flat' %}selected{% endif %}>Flat Amount</option></select></label>
+                                        <label>Discount Value<input type="number" step="0.5" name="discount_value" value="{{ cp.discount_value }}" required></label>
+                                        <label>Min Order Amount (₹)<input type="number" step="0.01" name="min_order" value="{{ cp.min_order_amount }}" required></label>
+                                        <label>Max Uses<input type="number" min="0" name="max_uses" value="{% if cp.max_uses %}{{ cp.max_uses }}{% else %}{% endif %}" placeholder="Unlimited"></label>
+                                        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="this.closest('dialog').close()">Cancel</button>
+                                            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                        </div>
+                                    </form>
+                                </dialog>
+                                <form method="POST" onsubmit="return confirm('Delete this coupon?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="coupon_id" value="{{ cp.id }}">
+                                    <button type="submit" class="btn btn-secondary btn-sm" title="Delete coupon"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">No coupons found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Coupon Form -->
+    <div class="glass-card" style="padding: 24px; height: fit-content;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-plus" style="color: var(--primary);"></i> Create New Coupon
+        </h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Coupon Code *</label>
+                    <input type="text" name="code" required placeholder="e.g. FESTIVE20" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); text-transform: uppercase;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Discount Type</label>
+                    <select name="discount_type" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                        <option value="percent">Percentage (%)</option>
+                        <option value="flat">Fixed Amount (₹)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Discount Value *</label>
+                    <input type="number" step="0.5" name="discount_value" value="15" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Min Order Amount (₹)</label>
+                    <input type="number" step="0.01" name="min_order" value="499" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary);">Max Uses</label>
+                    <input type="number" min="0" name="max_uses" placeholder="Unlimited" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
+                </div>
+
+                <div style="margin-top: 6px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-check"></i> Generate Coupon
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

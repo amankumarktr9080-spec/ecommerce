@@ -1,0 +1,190 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}{{ seller.store_name|default:"Vendor Dashboard" }}{% endblock %}
+{% block page_subtitle %}Live revenue analytics, order fulfillment, and inventory metrics{% endblock %}
+
+{% block panel_content %}
+<!-- KPI Cards Grid -->
+<div class="kpi-grid">
+    <a href="/seller/earnings/" class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Net Earnings (After 10% Fee)</span>
+            <h3>₹{{ net_earnings|floatformat:2 }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-arrow-up"></i> Gross: ₹{{ total_gross|floatformat:2 }}</span>
+            <small style="display: block; margin-top: 5px; color: var(--text-muted);">Awaiting delivery: ₹{{ pending_earnings|floatformat:2 }}</small>
+        </div>
+    </a>
+
+    <a href="/seller/earnings/" class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-percent"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Admin Platform Fee (10%)</span>
+            <h3>₹{{ total_commission|floatformat:2 }}</h3>
+            <span class="kpi-trend down"><i class="fa-solid fa-scale-balanced"></i> Auto-deducted</span>
+        </div>
+    </a>
+
+    <a href="/seller/orders/" class="kpi-card primary">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-box-open"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Total Orders</span>
+            <h3>{{ total_orders }}</h3>
+            <span class="kpi-trend up"><i class="fa-solid fa-check"></i> {{ completed_orders }} Delivered</span>
+        </div>
+    </a>
+
+    <a href="/seller/orders/" class="kpi-card danger">
+        <div class="kpi-icon-wrap danger">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Pending Action</span>
+            <h3>{{ pending_orders }}</h3>
+            <span class="kpi-trend down"><i class="fa-solid fa-clock"></i> Accept & Pack</span>
+        </div>
+    </a>
+</div>
+
+<!-- Chart & Low Stock Alert Grid -->
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 32px;">
+    
+    <!-- Sales Revenue Chart -->
+    <div class="glass-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-chart-line" style="color: var(--primary);"></i> Sales Revenue & Net Earnings Trend
+            </h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Last 7 Days</span>
+        </div>
+        <div style="height: 260px;">
+            <canvas id="sellerSalesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert Box -->
+    <div class="glass-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: #ef4444; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Low Stock Alerts
+            </h3>
+            <a href="/seller/inventory/" style="font-size: 0.82rem; color: var(--primary); font-weight: 600;">Update Stock</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for prod in low_stock_products %}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px;">
+                    <div>
+                        <span style="font-size: 0.72rem; font-weight: 800; color: var(--primary);">{{ prod.item_code }}</span>
+                        <h4 style="margin: 2px 0 0; font-size: 0.88rem; color: var(--text-primary);">{{ prod.title|truncatechars:28 }}</h4>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.85rem; font-weight: 800; color: #ef4444; background: #fef2f2; padding: 3px 8px; border-radius: 6px;">
+                            {{ prod.stock }} left
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="text-align: center; color: var(--text-muted); padding: 30px;">All inventory stocks healthy!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders Section -->
+<div class="glass-card" style="padding: 24px; margin-bottom: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-clipboard-list" style="color: var(--primary);"></i> Incoming Orders Awaiting Fulfillment
+        </h3>
+        <a href="/seller/orders/" style="font-size: 0.82rem; color: var(--primary); font-weight: 600;">Manage All Orders</a>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+                <tr style="background: var(--bg-app); text-align: left;">
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">Order Number</th>
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">Customer</th>
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">Gross Total</th>
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">10% Fee</th>
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">Net Payout</th>
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">Status</th>
+                    <th style="padding: 10px 14px; border-bottom: 1px solid var(--border-color);">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ord in recent_orders %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 12px 14px;"><strong>#{{ ord.order_number }}</strong></td>
+                        <td style="padding: 12px 14px;">{{ ord.customer_name }}</td>
+                        <td style="padding: 12px 14px; font-weight: 600;">₹{{ ord.grand_total }}</td>
+                        <td style="padding: 12px 14px; color: #ef4444;">-₹{{ ord.admin_commission_amount }}</td>
+                        <td style="padding: 12px 14px; font-weight: 700; color: #059669;">₹{{ ord.seller_net_earnings }}</td>
+                        <td style="padding: 12px 14px;">
+                            <span class="role-badge {% if ord.status == 'delivered' %}delivery{% elif ord.status == 'pending' %}admin{% else %}customer{% endif %}">
+                                {{ ord.get_status_display }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 14px;">
+                            <a href="/seller/orders/{{ ord.id }}/" class="action-pill-btn" style="padding: 6px 12px; font-size: 0.78rem; text-decoration: none;">
+                                Process
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">No orders placed yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('sellerSalesChart');
+    if (ctx && typeof Chart !== 'undefined') {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [
+                    {
+                        label: 'Gross Sales (₹)',
+                        data: [12000, 19000, 15000, 24000, 22000, 31000, 28000],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Net Earnings (₹)',
+                        data: [10800, 17100, 13500, 21600, 19800, 27900, 25200],
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

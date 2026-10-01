@@ -1,0 +1,74 @@
+{% extends "base/panel_base.html" %}
+
+{% block page_title %}Active Deliveries{% endblock %}
+{% block page_subtitle %}All orders currently assigned to you{% endblock %}
+
+{% block panel_content %}
+<div style="max-width: 980px; margin: 0 auto 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;">
+        <h2 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Assigned orders</h2>
+        <span class="badge badge-info">{{ assigned_orders|length }} active</span>
+    </div>
+
+    {% if assigned_return_pickups %}
+    <div style="margin: 28px 0 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+        <h2 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Manual return pickups</h2>
+        <span class="badge badge-warning">{{ assigned_return_pickups|length }} pickup(s)</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for pickup in assigned_return_pickups %}
+        <article class="glass-card" style="padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; border-left: 3px solid #f59e0b;">
+            <div style="min-width: 0;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
+                    <strong style="font-size: 1rem; color: var(--text-primary);">Return #{{ pickup.id }}</strong>
+                    <span class="badge badge-warning">Pickup scheduled</span>
+                </div>
+                <p style="margin: 0 0 5px; color: var(--text-primary);">{{ pickup.order.order_number }} · {{ pickup.customer.get_full_name|default:pickup.customer.username }}</p>
+                <p style="margin: 0 0 8px; color: var(--text-secondary); font-size: 0.85rem;">{{ pickup.order.shipping_address|truncatechars:90 }}</p>
+                <small style="color: var(--text-muted);">Reference: {{ pickup.pickup_tracking_id }} · {{ pickup.order_item.product.title|default:'Return item' }}</small>
+            </div>
+            <a href="/delivery/return-pickup/{{ pickup.id }}/" class="action-pill-btn" style="display: inline-flex; align-items: center; gap: 7px; background: #f59e0b; color: #111827; border: none; text-decoration: none; white-space: nowrap;">
+                <i class="fa-solid fa-box-arrow-up"></i> Open pickup
+            </a>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for assigned_order in assigned_orders %}
+        <article class="glass-card" style="padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center;">
+            <div style="min-width: 0;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
+                    <strong style="font-size: 1rem; color: var(--text-primary);">#{{ assigned_order.order_number }}</strong>
+                    {% if assigned_order.status == 'packed' %}
+                        <span class="badge badge-warning">Ready for pickup</span>
+                    {% elif assigned_order.status == 'shipped' %}
+                        <span class="badge badge-info">Shipped</span>
+                    {% else %}
+                        <span class="badge badge-success">Out for delivery</span>
+                    {% endif %}
+                </div>
+                <p style="margin: 0 0 5px; color: var(--text-primary);">{{ assigned_order.customer_name }}</p>
+                <p style="margin: 0 0 8px; color: var(--text-secondary); font-size: 0.85rem;">{{ assigned_order.seller.store_name }} &rarr; {{ assigned_order.shipping_address|truncatechars:90 }}</p>
+                <small style="color: var(--text-muted);">{{ assigned_order.created_at|date:"d M Y, h:i A" }} · {{ assigned_order.items.count }} item(s) · Payout ₹{{ assigned_order.delivery_partner_earning|floatformat:2 }}</small>
+            </div>
+            <a href="/delivery/active-delivery/{{ assigned_order.id }}/" class="action-pill-btn" style="display: inline-flex; align-items: center; gap: 7px; background: var(--primary); color: #fff; border: none; text-decoration: none; white-space: nowrap;">
+                <i class="fa-solid fa-play"></i> Start
+            </a>
+        </article>
+        {% empty %}
+        <div class="glass-card" style="padding: 48px 24px; text-align: center;">
+            <i class="fa-solid fa-route" style="font-size: 2.5rem; color: var(--text-muted); margin-bottom: 12px;"></i>
+            {% if search_query %}
+                <h3 style="margin: 0 0 8px; color: var(--text-primary);">No assigned orders match “{{ search_query }}”</h3>
+                <p style="margin: 0; color: var(--text-secondary);">Try an order number, customer name, phone, address, or store name.</p>
+            {% else %}
+                <h3 style="margin: 0 0 8px; color: var(--text-primary);">No active deliveries assigned</h3>
+                <p style="margin: 0; color: var(--text-secondary);">When a seller assigns an order to you and marks it packed or shipped, it will appear here.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

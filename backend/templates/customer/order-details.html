@@ -1,0 +1,86 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Order Details #{{ order.order_number|default:"ORD-10025" }}{% endblock %}
+{% block page_subtitle %}Track status, doorstep delivery OTP, timeline, and invoice details{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 28px; max-width: 900px; margin: 0 auto 40px;">
+    
+    <!-- Order Summary Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 24px;">
+        <div>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Order Reference</span>
+            <h2 style="font-size: 1.4rem; font-weight: 800; margin: 4px 0 0; color: var(--text-primary);">#{{ order.order_number|default:"ORD-2026-1001" }}</h2>
+            <small style="color: var(--text-secondary);">Placed on {{ order.created_at|date:"d M Y, h:i A"|default:"20 Sep 2026" }}</small>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="role-badge customer">
+                {{ order.get_status_display|default:"Out for Delivery" }}
+            </span>
+            {% if order.delivery_otp %}
+                <div style="padding: 8px 14px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; color: #d97706; font-weight: 800; font-size: 0.95rem;">
+                    <i class="fa-solid fa-key"></i> OTP: {{ order.delivery_otp }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Items List -->
+    <div style="margin-bottom: 28px;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">Order Items</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for item in order.items.all %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <img src="{{ item.product.main_image_url }}" alt="{{ item.product.title }}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 8px;">
+                        <div>
+                            <h4 style="margin: 0 0 4px; font-size: 0.95rem; color: var(--text-primary);">{{ item.product.title }}</h4>
+                            <small style="color: var(--text-secondary);">Qty: {{ item.quantity }} × ₹{{ item.unit_price }}</small>
+                        </div>
+                    </div>
+                    <strong style="font-size: 1rem; color: var(--text-primary);">₹{{ item.subtotal }}</strong>
+                </div>
+            {% empty %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500" style="width: 56px; height: 56px; object-fit: cover; border-radius: 8px;">
+                        <div>
+                            <h4 style="margin: 0 0 4px; font-size: 0.95rem; color: var(--text-primary);">boAt Airdopes 141 ANC</h4>
+                            <small style="color: var(--text-secondary);">Qty: 1 × ₹1,299.00</small>
+                        </div>
+                    </div>
+                    <strong style="font-size: 1rem; color: var(--text-primary);">₹1,299.00</strong>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div style="display: flex; justify-content: space-between; align-items: center; pt-16; border-top: 1px solid var(--border-color); padding-top: 20px;">
+        <a href="/customer/orders/{{ order.id }}/track/" class="action-pill-btn" style="background: var(--primary); color: #fff; text-decoration: none;">
+            <i class="fa-solid fa-map-location-dot"></i> Live Track Order Map
+        </a>
+        <a href="/customer/returns/" class="action-pill-btn" style="background: var(--bg-app); color: var(--text-primary); text-decoration: none; border: 1px solid var(--border-color);">
+            <i class="fa-solid fa-rotate-left"></i> Return / Replacement
+        </a>
+    </div>
+
+    {% if order.status == 'delivered' and order.delivery_partner %}
+    <div id="delivery-rating" style="margin-top: 20px; padding: 18px; border: 1px solid #f59e0b; border-radius: 12px; background: rgba(245, 158, 11, 0.08);">
+        <h3 style="margin: 0 0 6px; font-size: 1rem; color: var(--text-primary);">Rate Delivery Partner</h3>
+        <form method="POST" action="/customer/orders/{{ order.id }}/track/" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="rate_delivery">
+            <select name="rating" style="padding: 9px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary);">
+                <option value="5">★★★★★ 5</option><option value="4">★★★★☆ 4</option><option value="3">★★★☆☆ 3</option><option value="2">★★☆☆☆ 2</option><option value="1">★☆☆☆☆ 1</option>
+            </select>
+            <input type="text" name="comment" placeholder="Optional comment" style="flex: 1; min-width: 180px; padding: 9px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-surface); color: var(--text-primary);">
+            <button type="submit" class="action-pill-btn" style="background: #f59e0b; color: #fff; border: none;">Submit Rating</button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

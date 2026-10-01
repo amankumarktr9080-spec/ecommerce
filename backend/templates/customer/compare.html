@@ -1,0 +1,76 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Product Comparison{% endblock %}
+{% block page_subtitle %}Compare up to four products side by side{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 28px; margin-bottom: 40px; overflow-x: auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+        <div>
+            <h2 style="margin: 0 0 6px; font-size: 1.2rem; color: var(--text-primary);">Selected Products ({{ compare_products|length }}/4)</h2>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem;">Add products from the catalog to compare their price, ratings, policies, and specifications.</p>
+        </div>
+        {% if compare_products %}
+        <form method="POST" action="/customer/compare/">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear">
+            <button type="submit" class="action-pill-btn" style="color: #dc2626; border-color: #fecaca;">Clear All</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if not compare_products %}
+        <div style="text-align: center; padding: 48px 20px; color: var(--text-secondary);">
+            <i class="fa-solid fa-code-compare" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 14px;"></i>
+            <h3 style="margin: 0 0 8px; color: var(--text-primary);">No products selected</h3>
+            <p style="margin: 0 0 18px;">Choose products from the catalog using the compare icon.</p>
+            <a href="/customer/products/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; text-decoration: none;">Browse Products</a>
+        </div>
+    {% else %}
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+        <thead>
+            <tr style="border-bottom: 2px solid var(--border-color);">
+                <th style="padding: 14px; width: 200px;">Features / Spec</th>
+                {% for product in compare_products %}
+                <th style="padding: 14px; min-width: 220px; vertical-align: top;">
+                    <img src="{{ product.main_image_url }}" alt="{{ product.title }}" style="width: 90px; height: 90px; object-fit: contain; display: block; margin-bottom: 8px;">
+                    <a href="/customer/product/{{ product.id }}/" style="color: var(--text-primary); text-decoration: none;">{{ product.title }}</a>
+                    <form method="POST" action="/customer/compare/" style="margin-top: 10px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="remove">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <button type="submit" style="border: 0; background: none; padding: 0; color: #dc2626; cursor: pointer; font-size: 0.78rem;">Remove</button>
+                    </form>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px; font-weight: 700;">Selling Price</td>
+                {% for product in compare_products %}<td style="padding: 12px; color: var(--primary); font-weight: 800;">₹{{ product.selling_price }}</td>{% endfor %}
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px; font-weight: 700;">Customer Rating</td>
+                {% for product in compare_products %}<td style="padding: 12px; color: #f59e0b;">★ {{ product.average_rating }} / 5.0</td>{% endfor %}
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px; font-weight: 700;">Return Policy</td>
+                {% for product in compare_products %}<td style="padding: 12px; color: #10b981;">{% if product.is_returnable %}{{ product.return_window_days }} days return{% else %}Non-returnable{% endif %}{% if product.is_replaceable %}, {{ product.replacement_window_days }} days replacement{% endif %}</td>{% endfor %}
+            </tr>
+            {% for name in specification_names %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px; font-weight: 700;">{{ name }}</td>
+                {% for product in compare_products %}<td style="padding: 12px; color: var(--text-secondary);">{% for specification in product.specifications.all %}{% if specification.name == name %}{{ specification.value }}{% endif %}{% endfor %}</td>{% endfor %}
+            </tr>
+            {% endfor %}
+            <tr>
+                <td style="padding: 12px; font-weight: 700;">Actions</td>
+                {% for product in compare_products %}<td style="padding: 12px;"><a href="/customer/product/{{ product.id }}/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; text-decoration: none;">View Item</a></td>{% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

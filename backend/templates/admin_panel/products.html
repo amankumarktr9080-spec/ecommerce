@@ -1,0 +1,105 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Product Catalog Oversight{% endblock %}
+{% block page_subtitle %}Audit all seller listings, automated unique item codes, 10% commission calculations, and inventory{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-boxes-stacked" style="color: var(--primary);"></i> Platform Catalog ({{ products|length }} Items)
+        </h3>
+
+        <!-- Search Bar -->
+        <form method="GET" style="display: flex; gap: 8px;">
+            <input type="text" name="q" value="{{ search_q }}" placeholder="Search title, item code, SKU..." style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); min-width: 260px;">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-magnifying-glass"></i></button>
+            {% if search_q %}
+            <a href="/admin-panel/products/" class="btn btn-secondary btn-sm"><i class="fa-solid fa-xmark"></i></a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Item Code</th>
+                    <th>Product</th>
+                    <th>Seller Store</th>
+                    <th>Base Price</th>
+                    <th>10% Comm.</th>
+                    <th>Final Price</th>
+                    <th>Stock</th>
+                    <th>Return Window</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: var(--primary); font-family: monospace; font-weight: 700;">
+                            {{ p.item_code }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_panel:product_details' p.id %}" style="display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none;">
+                            <img src="{{ p.main_image_url }}" alt="{{ p.title }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <div>
+                                <strong style="color: var(--text-primary); display: block; font-size: 0.9rem;">{{ p.title|truncatechars:35 }}</strong>
+                                <small style="color: var(--text-secondary);">{{ p.category.name }}</small>
+                            </div>
+                        </a>
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-secondary); font-size: 0.85rem;">{{ p.seller.store_name }}</strong>
+                    </td>
+                    <td>₹{{ p.base_price }}</td>
+                    <td>
+                        <span style="color: #10b981; font-weight: 700;">+₹{{ p.admin_commission_amount }}</span>
+                    </td>
+                    <td>
+                        <strong style="color: var(--primary); font-size: 1rem;">₹{{ p.selling_price }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if p.stock > 5 %}success{% elif p.stock > 0 %}warning{% else %}danger{% endif %}">
+                            {{ p.stock }} in stock
+                        </span>
+                    </td>
+                    <td>
+                        {% if p.is_returnable %}
+                        <span style="font-size: 0.8rem; color: #10b981; font-weight: 600;">
+                            <i class="fa-solid fa-rotate-left"></i> {{ p.return_window_days }} Days
+                        </span>
+                        {% else %}
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Non-Returnable</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if p.is_active %}success{% else %}danger{% endif %}">
+                            {% if p.is_active %}Live{% else %}Hidden{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/admin-panel/products/{{ p.id }}/toggle-status/" class="btn btn-secondary btn-sm" title="Toggle Live / Hidden">
+                            {% if p.is_active %}
+                            <i class="fa-solid fa-eye-slash" style="color: #ef4444;"></i>
+                            {% else %}
+                            <i class="fa-solid fa-eye" style="color: #10b981;"></i>
+                            {% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px;">No products listed yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Live Fleet Operations & Map Telemetry{% endblock %}
+{% block page_subtitle %}Real-time geospatial tracking of on-duty delivery riders and live shipments in transit{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: 3fr 1fr; gap: 24px;">
+    <!-- Live Map Container -->
+    <div class="glass-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-satellite-dish" style="color: #ef4444; animation: pulse 2s infinite;"></i> Real-Time City Fleet Map
+            </h3>
+            <span class="badge badge-success" style="padding: 6px 12px; font-weight: 700;">
+                <i class="fa-solid fa-circle" style="font-size: 0.6rem;"></i> Telemetry Stream Active
+            </span>
+        </div>
+
+        <div id="fleetMap" style="height: 540px; border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;"></div>
+    </div>
+
+    <!-- Live Riders List Sidebar -->
+    <div class="glass-card" style="padding: 20px; height: fit-content;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-motorcycle" style="color: var(--primary);"></i> On-Duty Fleet ({{ riders|length }})
+        </h3>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto;">
+            {% for r in riders %}
+            <button type="button" class="rider-card" data-rider-id="{{ r.id }}" data-rider-name="{{ r.user.get_full_name|default:r.user.username }}" data-rider-lat="{{ r.current_lat }}" data-rider-lng="{{ r.current_lng }}" data-rider-vehicle="{{ r.vehicle_number }}" style="padding: 14px; border-radius: 10px; background: var(--bg-hover); border: 1px solid var(--border-color); text-align: left; cursor: pointer; color: inherit; font: inherit; width: 100%; transition: all 0.2s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="color: var(--text-primary);">{{ r.user.get_full_name|default:r.user.username }}</strong>
+                    <span class="badge" style="background: {% if r.is_online %}rgba(16, 185, 129, 0.15){% else %}rgba(100, 116, 139, 0.15){% endif %}; color: {% if r.is_online %}#10b981{% else %}var(--text-muted){% endif %}; font-size: 0.75rem;">
+                        {% if r.is_online %}ONLINE{% else %}OFFLINE{% endif %}
+                    </span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <span>Vehicle: <strong>{{ r.vehicle_number }}</strong></span> • 
+                    <span>Rating: <strong style="color: #f59e0b;">★ {{ r.rating }}</strong></span>
+                </div>
+                <small style="color: var(--text-muted); display: block; margin-top: 4px; font-family: monospace;">
+                    GPS: {{ r.current_lat }}, {{ r.current_lng }}
+                </small>
+            </button>
+            {% empty %}
+            <p style="color: var(--text-muted); text-align: center; padding: 20px 0;">No riders registered.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script id="fleet-rider-data" type="application/json">{{ riders_json|safe }}</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof L !== 'undefined') {
+        const map = L.map('fleetMap', { zoomControl: false }).setView([28.6139, 77.2090], 11);
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        }).addTo(map);
+
+        const riderIcon = L.divIcon({
+            html: '<div style="width: 32px; height: 32px; background: #3b82f6; border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"><i class="fa-solid fa-motorcycle" style="font-size: 14px;"></i></div>',
+            className: 'custom-rider-pin',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+
+        const riderData = JSON.parse(document.getElementById('fleet-rider-data').textContent || '[]');
+        const riderMarkers = new Map();
+
+        riderData.forEach(r => {
+            const marker = L.marker([r.lat, r.lng], { icon: riderIcon })
+                .addTo(map)
+                .bindPopup(`<strong>${r.name}</strong><br><span style="color:#10b981;">● ${r.status}</span><br><small>Vehicle: ${r.vehicle_number}</small>`);
+
+            riderMarkers.set(r.id, marker);
+        });
+
+        if (riderData.length) {
+            const firstRider = riderData[0];
+            map.setView([firstRider.lat, firstRider.lng], 12);
+        }
+
+        const riderCards = document.querySelectorAll('.rider-card');
+        riderCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const riderId = Number(this.dataset.riderId);
+                const rider = riderData.find(item => Number(item.id) === riderId);
+                const marker = riderMarkers.get(riderId);
+
+                if (rider && marker) {
+                    map.flyTo([rider.lat, rider.lng], 13, { duration: 1.2 });
+                    marker.openPopup();
+                    riderCards.forEach(item => item.style.borderColor = 'var(--border-color)');
+                    this.style.borderColor = '#3b82f6';
+                    this.style.boxShadow = '0 0 0 2px rgba(59,130,246,0.25)';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

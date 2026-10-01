@@ -1,0 +1,62 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Partner Rating & Feedback{% endblock %}
+{% block page_subtitle %}Customer satisfaction, star ratings, and performance badges{% endblock %}
+
+{% block panel_content %}
+<div class="kpi-grid">
+    <div class="kpi-card warning">
+        <div class="kpi-icon-wrap warning">
+            <i class="fa-solid fa-star"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>Overall Rating</span>
+            <h3>{% if average_rating != None %}★ {{ average_rating|floatformat:1 }} / 5.0{% else %}No ratings yet{% endif %}</h3>
+            <span class="kpi-trend"><i class="fa-solid fa-chart-line"></i> {% if fleet_rank %}#{{ fleet_rank }} of {{ rated_fleet_count }} rated riders{% else %}Fleet rank unavailable{% endif %}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card success">
+        <div class="kpi-icon-wrap success">
+            <i class="fa-solid fa-clock-check"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>On-Time Handover Rate</span>
+            <h3>{% if on_time_rate != None %}{{ on_time_rate|floatformat:1 }}%{% else %}N/A{% endif %}</h3>
+            <span class="kpi-trend"><i class="fa-solid fa-clock"></i> {% if on_time_eligible_count %}{{ on_time_count }} of {{ on_time_eligible_count }} deliveries met ETA{% else %}No completed deliveries with an ETA{% endif %}</span>
+        </div>
+    </div>
+
+    <div class="kpi-card info">
+        <div class="kpi-icon-wrap primary">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="kpi-meta">
+            <span>OTP Compliance</span>
+            <h3>{% if otp_rate != None %}{{ otp_rate|floatformat:1 }}%{% else %}N/A{% endif %}</h3>
+            <span class="kpi-trend"><i class="fa-solid fa-shield-halved"></i> {% if delivered_count %}{{ otp_verified_count }} of {{ delivered_count }} deliveries have OTP verification records{% else %}No completed deliveries yet{% endif %}</span>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card" style="padding: 24px;">
+    <h3 style="margin: 0 0 20px 0; font-size: 1.2rem; color: var(--text-primary);">
+        <i class="fa-solid fa-comments" style="color: var(--primary);"></i> Recent Customer Feedback
+    </h3>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for review in ratings %}
+        <div style="padding: 16px; border-radius: 12px; background: var(--bg-hover); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <strong style="color: var(--text-primary);">{{ review.customer.get_full_name|default:review.customer.username }}</strong>
+                <span style="color: #f59e0b; font-weight: 700;">{{ review.rating }} / 5 ★</span>
+            </div>
+            <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">{{ review.comment|default:"No comment provided." }}</p>
+        </div>
+        {% empty %}
+        <p style="margin: 0; color: var(--text-secondary);">No delivery ratings received yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

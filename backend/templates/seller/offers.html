@@ -1,0 +1,100 @@
+{% extends "base/panel_base.html" %}
+
+{% block page_title %}Product Offers{% endblock %}
+{% block page_subtitle %}Create discounts for products in your store{% endblock %}
+
+{% block panel_content %}
+<div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 24px; align-items: start;">
+    <section class="glass-card" style="padding: 24px; min-width: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: var(--text-primary);">Your product offers</h3>
+            <span class="badge badge-info">{{ offers|length }} active</span>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Offer</th>
+                        <th>Discount</th>
+                        <th>Current price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for offer in offers %}
+                    <tr>
+                        <td><strong>{{ offer.product.title }}</strong></td>
+                        <td>
+                            <form method="POST" action="/seller/offers/" style="display: grid; gap: 6px; min-width: 150px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update">
+                                <input type="hidden" name="offer_id" value="{{ offer.id }}">
+                                <input class="form-control" type="text" name="title" value="{{ offer.title }}" maxlength="150" required aria-label="Offer name">
+                                <select class="form-select" name="discount_type" aria-label="Discount type">
+                                    <option value="percent" {% if offer.discount_type == 'percent' %}selected{% endif %}>Percentage</option>
+                                    <option value="flat" {% if offer.discount_type == 'flat' %}selected{% endif %}>Flat amount</option>
+                                </select>
+                                <input class="form-control" type="number" name="discount_value" value="{{ offer.discount_value }}" min="0.01" step="0.01" required aria-label="Discount value">
+                                <button class="btn btn-primary" type="submit">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            {% if offer.discount_type == 'percent' %}{{ offer.discount_value }}%{% else %}₹{{ offer.discount_value }}{% endif %}
+                        </td>
+                        <td>₹{{ offer.product.selling_price }}</td>
+                        <td>
+                            <form method="POST" action="/seller/offers/" style="display: inline;" onsubmit="return confirm('Remove this offer and restore the original price?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="offer_id" value="{{ offer.id }}">
+                                <button class="btn btn-danger" type="submit">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">You haven't created any offers yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="glass-card" style="padding: 24px;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">Create an offer</h3>
+        {% if available_products %}
+        <form method="POST" action="/seller/offers/" style="display: flex; flex-direction: column; gap: 14px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <div>
+                <label for="offer-product" style="display: block; margin-bottom: 5px;">Your product</label>
+                <select id="offer-product" class="form-select" name="product_id" required>
+                    {% for product in available_products %}
+                    <option value="{{ product.id }}">{{ product.title }} (₹{{ product.selling_price }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="offer-title" style="display: block; margin-bottom: 5px;">Offer name</label>
+                <input id="offer-title" class="form-control" type="text" name="title" maxlength="150" required>
+            </div>
+            <div>
+                <label for="offer-type" style="display: block; margin-bottom: 5px;">Discount type</label>
+                <select id="offer-type" class="form-select" name="discount_type">
+                    <option value="percent">Percentage (%)</option>
+                    <option value="flat">Flat amount (₹)</option>
+                </select>
+            </div>
+            <div>
+                <label for="offer-value" style="display: block; margin-bottom: 5px;">Discount value</label>
+                <input id="offer-value" class="form-control" type="number" name="discount_value" min="0.01" step="0.01" required>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width: 100%;">Create offer</button>
+        </form>
+        {% else %}
+        <p style="color: var(--text-muted); margin: 0;">All your products already have an offer, or you haven't added a product yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

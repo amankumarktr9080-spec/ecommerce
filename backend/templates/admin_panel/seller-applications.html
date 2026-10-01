@@ -1,0 +1,112 @@
+{% extends "base/panel_base.html" %}
+{% block page_title %}Seller Applications{% endblock %}
+{% block page_subtitle %}Verify public merchant registrations and approve accounts only after KYC review{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+        <h3 style="margin: 0; color: var(--text-primary);">Seller Approval Queue</h3>
+        <span class="badge badge-warning">{{ applications|length }} applications</span>
+    </div>
+
+    {% if applications %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Store</th>
+                    <th>Owner</th>
+                    <th>Contact</th>
+                    <th>Address</th>
+                    <th>GSTIN / PAN</th>
+                    <th>Document</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td><strong>{{ app.store_name }}</strong></td>
+                    <td>{{ app.full_name }}<br><small>{{ app.email }}</small></td>
+                    <td>{{ app.phone }}</td>
+                    <td>{{ app.business_address }}<br><small>{{ app.city }}, {{ app.state }} - {{ app.pincode }}</small></td>
+                    <td>{{ app.gstin|default:'N/A' }}<br><small>{{ app.pan_number|default:'N/A' }}</small></td>
+                    <td>
+                        {% if app.kyc_document %}
+                            <a href="{{ app.kyc_document.url }}" target="_blank" class="btn btn-secondary btn-sm">View File</a>
+                        {% else %}
+                            <span class="badge badge-secondary">No file</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-{% if app.status == 'approved' %}success{% elif app.status == 'rejected' %}danger{% else %}warning{% endif %}">{{ app.get_status_display }}</span></td>
+                    <td>
+                        {% if app.status == 'pending' %}
+                        <button type="button" class="btn btn-secondary btn-sm" title="View full application" aria-label="View full application" onclick="document.getElementById('sellerModal{{ app.id }}').style.display='flex';"><i class="fa-solid fa-eye"></i></button>
+                        {% else %}
+                        <small>{{ app.admin_note|default:'No notes' }}</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">No seller applications pending review.</div>
+    {% endif %}
+</div>
+
+{% for app in applications %}
+{% if app.status == 'pending' %}
+<div id="sellerModal{{ app.id }}" class="application-modal" role="dialog" aria-modal="true" aria-labelledby="sellerModalTitle{{ app.id }}" onclick="if(event.target === this) this.style.display='none';">
+    <div class="application-modal-content">
+        <div class="application-modal-header">
+            <div>
+                <h2 id="sellerModalTitle{{ app.id }}">{{ app.store_name }}</h2>
+                <p>Seller KYC application submitted {{ app.created_at|date:"d M Y, h:i A" }}</p>
+            </div>
+            <button type="button" class="modal-close" aria-label="Close" onclick="document.getElementById('sellerModal{{ app.id }}').style.display='none';"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="application-detail-grid">
+            <div><span>Owner</span><strong>{{ app.full_name }}</strong></div>
+            <div><span>Login User ID</span><strong>{{ app.username|default:'Not provided' }}</strong></div>
+            <div><span>Email</span><strong>{{ app.email }}</strong></div>
+            <div><span>Phone</span><strong>{{ app.phone }}</strong></div>
+            <div class="wide"><span>Business Address</span><strong>{{ app.business_address }}, {{ app.city }}, {{ app.state }} - {{ app.pincode }}</strong></div>
+            <div><span>GSTIN</span><strong>{{ app.gstin|default:'Not provided' }}</strong></div>
+            <div><span>PAN</span><strong>{{ app.pan_number|default:'Not provided' }}</strong></div>
+            <div class="wide"><span>KYC Document</span>{% if app.kyc_document %}<a href="{{ app.kyc_document.url }}" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-file-arrow-up"></i> Open Document</a>{% else %}<strong>Not uploaded</strong>{% endif %}</div>
+        </div>
+        <form method="post" class="application-review-form">{% csrf_token %}
+            <input type="hidden" name="application_id" value="{{ app.id }}">
+            <input type="hidden" name="action" value="approve">
+            <textarea name="admin_note" rows="3" placeholder="Admin review notes"></textarea>
+            <div class="application-review-actions">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Approve Application</button>
+                <button type="submit" class="btn btn-danger" onclick="this.form.action.value='reject';"><i class="fa-solid fa-xmark"></i> Reject</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<style>
+.application-modal { display: none; position: fixed; inset: 0; z-index: 10000; align-items: center; justify-content: center; padding: 24px; background: rgba(2, 6, 23, .78); backdrop-filter: blur(8px); }
+.application-modal-content { width: min(900px, 100%); max-height: 90vh; overflow-y: auto; padding: 28px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-card); box-shadow: 0 24px 80px rgba(0,0,0,.45); }
+.application-modal-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 24px; }
+.application-modal-header h2 { margin: 0 0 5px; color: var(--text-primary); }
+.application-modal-header p { margin: 0; color: var(--text-secondary); }
+.modal-close { border: 0; background: transparent; color: var(--text-secondary); font-size: 1.4rem; cursor: pointer; }
+.application-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.application-detail-grid > div { padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(148,163,184,.06); }
+.application-detail-grid .wide { grid-column: 1 / -1; }
+.application-detail-grid span { display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: .8rem; }
+.application-detail-grid strong { color: var(--text-primary); overflow-wrap: anywhere; }
+.application-review-form { display: grid; gap: 12px; margin-top: 22px; }
+.application-review-form textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-primary); }
+.application-review-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 650px) { .application-detail-grid { grid-template-columns: 1fr; } .application-detail-grid .wide { grid-column: auto; } }
+</style>
+{% endblock %}

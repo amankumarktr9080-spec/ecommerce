@@ -1,0 +1,166 @@
+{% load static %}
+
+<aside class="app-sidebar" id="appSidebar">
+    <!-- Header / Brand -->
+    <div class="sidebar-header sidebar-header-menu-only">
+        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" title="Toggle navigation menu" aria-label="Toggle navigation menu">
+            <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        <a href="/" class="sidebar-header-brand" aria-label="ShopVerse home">
+            <span class="sidebar-header-brand-icon"><i class="fa-solid fa-bolt-lightning"></i></span>
+            <span>ShopVerse</span>
+        </a>
+    </div>
+
+    <!-- User Role Profile Card -->
+    <div class="sidebar-user-card">
+        <img src="{% if not request.user.is_authenticated or current_panel == 'customer' and request.user.role != 'customer' %}https://api.dicebear.com/7.x/avataaars/svg?seed=Guest{% else %}{{ request.user.avatar_url|default:'https://api.dicebear.com/7.x/avataaars/svg?seed=Aman' }}{% endif %}" 
+             alt="Avatar" class="sidebar-avatar">
+        <div class="sidebar-user-info">
+            <h4>{% if request.user.is_authenticated and current_panel != 'customer' or request.user.is_authenticated and request.user.role == 'customer' %}{{ request.user.get_full_name|default:request.user.username }}{% else %}Guest User{% endif %}</h4>
+            <span class="role-badge {{ current_panel|default:'customer' }}">
+                {{ current_panel|default:"Customer"|title }}
+            </span>
+        </div>
+    </div>
+
+    {% if current_panel == 'delivery' or not current_panel and request.user.is_authenticated and request.user.role == 'delivery' %}
+    <!-- Rider Online / Offline Duty Switch -->
+    <a href="/delivery/toggle-duty/" class="status-pill-toggle {% if rider.is_online|default_if_none:True %}online{% else %}offline{% endif %}" style="text-decoration: none;" title="Click to Switch Duty Status">
+        <span>
+            <i class="fa-solid fa-circle" style="color: {% if rider.is_online|default_if_none:True %}#10b981{% else %}#ef4444{% endif %}; font-size: 0.65rem;"></i> 
+            <strong>{% if rider.is_online|default_if_none:True %}ONLINE{% else %}OFFLINE{% endif %}</strong>
+        </span>
+        <i class="fa-solid fa-toggle-{% if rider.is_online|default_if_none:True %}on{% else %}off{% endif %}" style="font-size: 1.25rem;"></i>
+    </a>
+    {% endif %}
+
+    <!-- Role-Specific Navigation Menu -->
+    <ul class="sidebar-nav">
+        <li><a href="/" class="{% if request.path == '/' %}active{% endif %}"><i class="fa-solid fa-house"></i> <span>Home</span></a></li>
+        {% if current_panel == 'seller' or not current_panel and request.user.is_authenticated and request.user.role == 'seller' %}
+            <!-- SELLER PANEL (16 Items) -->
+            <li><a href="/seller/dashboard/" class="{% if active_menu == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> <span data-i18n="dashboard">Dashboard</span></a></li>
+            <li><a href="/seller/store/" class="{% if active_menu == 'store' %}active{% endif %}"><i class="fa-solid fa-store"></i> <span data-i18n="my_store">My Store</span></a></li>
+            <li><a href="/seller/products/" class="{% if active_menu == 'products' %}active{% endif %}"><i class="fa-solid fa-boxes-stacked"></i> <span data-i18n="products">Products</span></a></li>
+            <li><a href="/seller/categories/" class="{% if active_menu == 'categories' %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> <span data-i18n="categories">Categories</span></a></li>
+            <li><a href="/seller/inventory/" class="{% if active_menu == 'inventory' %}active{% endif %}"><i class="fa-solid fa-warehouse"></i> <span data-i18n="inventory">Inventory</span></a></li>
+            <li><a href="/seller/orders/" class="{% if active_menu == 'orders' %}active{% endif %}"><i class="fa-solid fa-box-open"></i> <span data-i18n="orders">Orders</span> {% if pending_orders_count %}<span class="sidebar-badge">{{ pending_orders_count }}</span>{% elif orders %}<span class="sidebar-badge">{{ orders|length }}</span>{% endif %}</a></li>
+            <li><a href="/seller/shipping/" class="{% if active_menu == 'shipping' %}active{% endif %}"><i class="fa-solid fa-truck-ramp-box"></i> <span data-i18n="shipping">Shipping</span></a></li>
+            <li><a href="/seller/returns/" class="{% if active_menu == 'returns' %}active{% endif %}"><i class="fa-solid fa-arrow-rotate-left"></i> <span data-i18n="returns">Returns</span></a></li>
+            <li><a href="/seller/earnings/" class="{% if active_menu == 'earnings' %}active{% endif %}"><i class="fa-solid fa-wallet"></i> <span data-i18n="earnings">Earnings</span></a></li>
+            <li><a href="/seller/reviews/" class="{% if active_menu == 'reviews' %}active{% endif %}"><i class="fa-solid fa-star-half-stroke"></i> <span data-i18n="reviews">Reviews</span></a></li>
+            <li><a href="/seller/offers/" class="{% if active_menu == 'offers' %}active{% endif %}"><i class="fa-solid fa-tags"></i> <span data-i18n="offers">Offers</span></a></li>
+            <li><a href="/seller/customers/" class="{% if active_menu == 'customers' %}active{% endif %}"><i class="fa-solid fa-users"></i> <span data-i18n="customers">Customers</span></a></li>
+            <li><a href="/seller/reports/" class="{% if active_menu == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> <span data-i18n="reports">Reports</span></a></li>
+            <li><a href="/seller/notifications/" class="{% if active_menu == 'notifications' %}active{% endif %}"><i class="fa-solid fa-bell"></i> <span data-i18n="notifications">Notifications</span></a></li>
+            <li><a href="/seller/support/" class="{% if active_menu == 'support' %}active{% endif %}"><i class="fa-solid fa-headset"></i> <span data-i18n="support">Support</span></a></li>
+            <li><a href="/seller/settings/" class="{% if active_menu == 'settings' %}active{% endif %}"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a></li>
+            <li><a href="/auth/logout/"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="logout">Logout</span></a></li>
+
+        {% elif current_panel == 'delivery' or not current_panel and request.user.is_authenticated and request.user.role == 'delivery' %}
+            <!-- DELIVERY PARTNER PANEL (14 Items) -->
+            <li><a href="/delivery/dashboard/" class="{% if active_menu == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a></li>
+            <li><a href="/delivery/active-delivery/" class="{% if active_menu == 'active' %}active{% endif %}"><i class="fa-solid fa-route"></i> <span data-i18n="active_delivery">Active Delivery</span></a></li>
+            <li><a href="/delivery/delivery-history/" class="{% if active_menu == 'history' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="delivery_history">Delivery History</span></a></li>
+            <li><a href="/delivery/earnings/" class="{% if active_menu == 'earnings' %}active{% endif %}"><i class="fa-solid fa-indian-rupee-sign"></i> <span data-i18n="earnings">Earnings</span></a></li>
+            <li><a href="/delivery/reports/" class="{% if active_menu == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> <span data-i18n="reports">Reports</span></a></li>
+            <li><a href="/delivery/ratings/" class="{% if active_menu == 'ratings' %}active{% endif %}"><i class="fa-solid fa-star"></i> <span data-i18n="ratings">Ratings</span></a></li>
+            <li><a href="/delivery/notifications/" class="{% if active_menu == 'notifications' %}active{% endif %}"><i class="fa-solid fa-bell"></i> <span data-i18n="notifications">Notifications</span></a></li>
+            <li><a href="/delivery/support/" class="{% if active_menu == 'support' %}active{% endif %}"><i class="fa-solid fa-headset"></i> <span data-i18n="support">Support</span></a></li>
+            <li><a href="/delivery/profile/" class="{% if active_menu == 'profile' %}active{% endif %}"><i class="fa-solid fa-id-card"></i> <span data-i18n="profile">Profile</span></a></li>
+            <li><a href="/delivery/documents/" class="{% if active_menu == 'documents' %}active{% endif %}"><i class="fa-solid fa-file-shield"></i> <span data-i18n="documents">Documents</span></a></li>
+            <li><a href="/delivery/bank/" class="{% if active_menu == 'bank' %}active{% endif %}"><i class="fa-solid fa-building-columns"></i> <span data-i18n="bank_upi">Bank/UPI</span></a></li>
+            <li><a href="/delivery/settings/" class="{% if active_menu == 'settings' %}active{% endif %}"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a></li>
+            <li><a href="/auth/logout/"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="logout">Logout</span></a></li>
+
+        {% elif current_panel == 'admin' or not current_panel and request.user.is_authenticated and request.user.role == 'admin' %}
+            <!-- ADMIN PANEL (18 Items) -->
+            <li><a href="/admin-panel/dashboard/" class="{% if active_menu == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> <span data-i18n="dashboard">Dashboard</span></a></li>
+            <li><a href="/admin-panel/profile/" class="{% if active_menu == 'profile' %}active{% endif %}"><i class="fa-solid fa-user-circle"></i> <span>My Profile</span></a></li>
+            <li><a href="/admin-panel/customers/" class="{% if active_menu == 'customers' %}active{% endif %}"><i class="fa-solid fa-users"></i> <span data-i18n="customers">Customers</span></a></li>
+            <li><a href="/admin-panel/seller-applications/" class="{% if active_menu == 'seller_applications' %}active{% endif %}"><i class="fa-solid fa-user-check"></i> <span>Seller Applications</span></a></li>
+            <li><a href="/admin-panel/sellers/" class="{% if active_menu == 'sellers' %}active{% endif %}"><i class="fa-solid fa-store"></i> <span data-i18n="sellers">Sellers</span></a></li>
+            <li><a href="/admin-panel/delivery-applications/" class="{% if active_menu == 'delivery_applications' %}active{% endif %}"><i class="fa-solid fa-id-card"></i> <span>Rider Applications</span></a></li>
+            <li><a href="/admin-panel/delivery-partners/" class="{% if active_menu == 'delivery_partners' %}active{% endif %}"><i class="fa-solid fa-motorcycle"></i> <span data-i18n="delivery_partners">Delivery Partners</span></a></li>
+            <li><a href="/admin-panel/products/" class="{% if active_menu == 'products' %}active{% endif %}"><i class="fa-solid fa-boxes-stacked"></i> <span data-i18n="products">Products</span></a></li>
+            <li><a href="/admin-panel/categories/" class="{% if active_menu == 'categories' %}active{% endif %}"><i class="fa-solid fa-list-check"></i> <span data-i18n="categories">Categories</span></a></li>
+            <li><a href="/admin-panel/subcategories/" class="{% if active_menu == 'subcategories' %}active{% endif %}"><i class="fa-solid fa-list"></i> <span>Subcategories</span></a></li>
+            <li><a href="/admin-panel/brands/" class="{% if active_menu == 'brands' %}active{% endif %}"><i class="fa-solid fa-certificate"></i> <span>Brands</span></a></li>
+            <li><a href="/admin-panel/orders/" class="{% if active_menu == 'orders' %}active{% endif %}"><i class="fa-solid fa-cart-flatbed"></i> <span data-i18n="orders">Orders</span></a></li>
+            <li><a href="/admin-panel/payments/" class="{% if active_menu == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> <span data-i18n="payments">Payments</span></a></li>
+            <li><a href="/admin-panel/payouts/" class="{% if active_menu == 'payouts' %}active{% endif %}"><i class="fa-solid fa-money-bill-transfer"></i> <span>Seller Payouts</span></a></li>
+            <li><a href="/admin-panel/commissions/" class="{% if active_menu == 'commissions' %}active{% endif %}"><i class="fa-solid fa-percent"></i> <span data-i18n="commission">Commission</span></a></li>
+            <li><a href="/admin-panel/returns/" class="{% if active_menu == 'returns' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="returns">Returns & Refunds</span></a></li>
+            <li><a href="/admin-panel/coupons/" class="{% if active_menu == 'coupons' %}active{% endif %}"><i class="fa-solid fa-ticket"></i> <span data-i18n="coupons">Coupons</span></a></li>
+            <li><a href="/admin-panel/reviews/" class="{% if active_menu == 'reviews' %}active{% endif %}"><i class="fa-solid fa-star"></i> <span data-i18n="reviews">Reviews</span></a></li>
+            <li><a href="/admin-panel/reports/" class="{% if active_menu == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> <span data-i18n="reports">Reports</span></a></li>
+            <li><a href="/admin-panel/live-operations/" class="{% if active_menu == 'live_operations' %}active{% endif %}"><i class="fa-solid fa-map-location-dot"></i> <span>Live Fleet Telemetry</span></a></li>
+            <li><a href="/admin-panel/tickets/" class="{% if active_menu == 'tickets' %}active{% endif %}"><i class="fa-solid fa-headset"></i> <span data-i18n="support">Support</span> {% if open_support_tickets_count %}<span class="sidebar-badge">{{ open_support_tickets_count }}</span>{% endif %}</a></li>
+            <li><a href="/admin-panel/marketplace-content/" class="{% if active_menu == 'marketplace_content' %}active{% endif %}"><i class="fa-solid fa-globe"></i> <span>Marketplace Content</span></a></li>
+            <li><a href="/admin-panel/settings/" class="{% if active_menu == 'settings' %}active{% endif %}"><i class="fa-solid fa-sliders"></i> <span data-i18n="settings">Settings</span></a></li>
+            <li><a href="/auth/logout/"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="logout">Logout</span></a></li>
+
+        {% else %}
+            <!-- CUSTOMER PANEL (16 Items) -->
+            <li><a href="/customer/dashboard/" class="{% if active_menu == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a></li>
+            <li><a href="/customer/products/" class="{% if active_menu == 'products' %}active{% endif %}"><i class="fa-solid fa-bag-shopping"></i> <span data-i18n="products">Products</span></a></li>
+            <li><a href="/customer/categories/" class="{% if active_menu == 'categories' %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> <span data-i18n="categories">Categories</span></a></li>
+            <li><a href="/customer/compare/" class="{% if active_menu == 'compare' %}active{% endif %}"><i class="fa-solid fa-code-compare"></i> <span>Compare</span> {% if compare_product_ids %}<span class="sidebar-badge">{{ compare_product_ids|length }}</span>{% endif %}</a></li>
+            <li><a href="/customer/cart/" class="{% if active_menu == 'cart' %}active{% endif %}"><i class="fa-solid fa-cart-shopping"></i> <span data-i18n="cart">Cart</span> {% if cart_count %}<span class="sidebar-badge">{{ cart_count }}</span>{% endif %}</a></li>
+            <li><a href="/customer/wishlist/" class="{% if active_menu == 'wishlist' %}active{% endif %}"><i class="fa-solid fa-heart"></i> <span data-i18n="wishlist">Wishlist</span></a></li>
+            <li><a href="/customer/orders/" class="{% if active_menu == 'orders' %}active{% endif %}"><i class="fa-solid fa-box-archive"></i> <span data-i18n="orders">My Orders</span></a></li>
+            <li><a href="/customer/rewards/" class="{% if active_menu == 'rewards' %}active{% endif %}"><i class="fa-solid fa-gift"></i> <span>Refer & Earn</span></a></li>
+            <li><a href="/customer/returns/" class="{% if active_menu == 'returns' %}active{% endif %}"><i class="fa-solid fa-arrow-rotate-left"></i> <span data-i18n="returns">Returns</span></a></li>
+            <li><a href="/customer/coupons/" class="{% if active_menu == 'coupons' %}active{% endif %}"><i class="fa-solid fa-ticket-simple"></i> <span data-i18n="coupons">Coupons</span></a></li>
+            <li><a href="/customer/reviews/" class="{% if active_menu == 'reviews' %}active{% endif %}"><i class="fa-solid fa-star"></i> <span data-i18n="reviews">Reviews</span></a></li>
+            <li><a href="/customer/reports/" class="{% if active_menu == 'reports' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i> <span data-i18n="reports">Reports</span></a></li>
+            <li><a href="/customer/support/" class="{% if active_menu == 'support' %}active{% endif %}"><i class="fa-solid fa-headset"></i> <span data-i18n="support">Support</span></a></li>
+            <li><a href="/customer/notifications/" class="{% if active_menu == 'notifications' %}active{% endif %}"><i class="fa-solid fa-bell"></i> <span data-i18n="notifications">Notifications</span></a></li>
+            <li><a href="/customer/profile/" class="{% if active_menu == 'profile' %}active{% endif %}"><i class="fa-solid fa-circle-user"></i> <span data-i18n="profile">Profile</span></a></li>
+            <li><a href="/customer/addresses/" class="{% if active_menu == 'addresses' %}active{% endif %}"><i class="fa-solid fa-location-dot"></i> <span data-i18n="addresses">Addresses</span></a></li>
+            <li><a href="/customer/payments/" class="{% if active_menu == 'payments' %}active{% endif %}"><i class="fa-solid fa-credit-card"></i> <span data-i18n="payments">Payments</span></a></li>
+            <li><a href="/customer/settings/" class="{% if active_menu == 'settings' %}active{% endif %}"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a></li>
+            <li><a href="/auth/logout/"><i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="logout">Logout</span></a></li>
+        {% endif %}
+    </ul>
+</aside>
+
+<script>
+const panelSidebar = document.getElementById('appSidebar');
+
+if (panelSidebar && !window.matchMedia('(max-width: 768px)').matches && localStorage.getItem('panelSidebarCollapsed') === 'true') {
+    panelSidebar.classList.add('collapsed');
+}
+
+if (panelSidebar) {
+    panelSidebar.querySelectorAll('.sidebar-nav a').forEach((link) => {
+        const label = link.querySelector('span');
+        if (label && label.textContent.trim()) link.title = label.textContent.trim();
+    });
+}
+
+function toggleSidebarCollapse() {
+    const sidebar = document.getElementById('appSidebar');
+    if (sidebar) {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            toggleMobileSidebar();
+            return;
+        }
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        localStorage.setItem('panelSidebarCollapsed', isCollapsed ? 'true' : 'false');
+    }
+}
+
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('appSidebar');
+    if (sidebar) {
+        sidebar.classList.remove('collapsed');
+        const isOpen = sidebar.classList.toggle('mobile-open');
+        const icon = document.querySelector('.sidebar-toggle-btn i');
+        const toggle = document.querySelector('.mobile-sidebar-toggle');
+        if (icon) icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars-staggered';
+        if (toggle) toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+    }
+}
+</script>

@@ -1,0 +1,60 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Notifications & Alerts{% endblock %}
+{% block page_subtitle %}Live updates on shipments, price drops, and account alerts{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; max-width: 800px; margin: 0 auto 40px;" data-notification-selection>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Recent Alerts ({{ notifications|length }})</h3>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <form method="POST" action="/customer/notifications/" style="margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_all_read">
+            <button type="submit" class="btn btn-secondary btn-sm" {% if not unread_count %}disabled{% endif %}>
+                <i class="fa-solid fa-check-double"></i> Mark All as Read ({{ unread_count }})
+            </button>
+        </form>
+        {% if notifications %}
+        <form id="customerNotificationDeleteForm" method="POST" action="/customer/notifications/" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_selected">
+            <button type="button" class="btn btn-secondary btn-sm" data-delete-mode><i class="fa-solid fa-trash"></i> Delete</button>
+            <label data-select-all-label hidden style="color: var(--text-secondary);"><input type="checkbox" data-select-all> Select all</label>
+            <button type="submit" class="btn btn-danger btn-sm" data-delete-selected hidden disabled style="background: var(--danger, #dc2626); color: #fff; border-color: var(--danger, #dc2626);"><i class="fa-solid fa-trash"></i> Delete selected (0)</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-cancel-selection hidden>Cancel</button>
+        </form>
+        {% endif %}
+        </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for n in notifications %}
+            <div style="padding: 16px; background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-color); display: grid; grid-template-columns: 20px 40px minmax(0, 1fr) auto; align-items: center; gap: 14px;">
+                <input class="notification-select" type="checkbox" name="notification_ids" value="{{ n.id }}" form="customerNotificationDeleteForm" aria-label="Select notification" style="visibility: hidden; width: 18px; height: 18px; margin: 0; accent-color: var(--primary);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-primary);">{{ n.title }}</h4>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">{{ n.created_at|timesince }} ago</small>
+                    </div>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+                        {{ n.message }}
+                    </p>
+                </div>
+                {% if n.link %}
+                <a href="{{ n.link }}" class="btn btn-secondary btn-sm" style="flex: 0 0 auto; text-decoration: none;">
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Open
+                </a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p style="text-align: center; color: var(--text-muted); padding: 30px;">No notifications yet.</p>
+        {% endfor %}
+    </div>
+</div>
+<script src="{% static 'js/notification-selection.js' %}" defer></script>
+{% endblock %}

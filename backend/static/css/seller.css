@@ -1,0 +1,880 @@
+/* =========================================
+   SELLER PANEL
+   seller.css
+========================================= */
+
+:root {
+    --seller-primary: #2563eb;
+    --seller-primary-dark: #1d4ed8;
+    --seller-success: #16a34a;
+    --seller-danger: #dc2626;
+    --seller-warning: #f59e0b;
+    --seller-info: #0891b2;
+
+    --seller-bg: #f8fafc;
+    --seller-card: #ffffff;
+    --seller-text: #1e293b;
+    --seller-muted: #64748b;
+    --seller-border: #e2e8f0;
+
+    --seller-radius: 14px;
+    --seller-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+}
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.seller-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: auto;
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+/* =========================================
+   PAGE HEADER
+========================================= */
+
+.seller-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.seller-page-header h1 {
+    margin: 0;
+    font-size: 28px;
+    color: var(--seller-text);
+}
+
+.seller-page-header p {
+    margin: 6px 0 0;
+    color: var(--seller-muted);
+    font-size: 14px;
+}
+
+/* =========================================
+   CARDS
+========================================= */
+
+.seller-card {
+    background: var(--seller-card);
+    border: 1px solid var(--seller-border);
+    border-radius: var(--seller-radius);
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: var(--seller-shadow);
+    box-sizing: border-box;
+}
+
+.seller-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--seller-text);
+    font-size: 20px;
+}
+
+.seller-card h3 {
+    color: var(--seller-text);
+}
+
+/* =========================================
+   STATS
+========================================= */
+
+.seller-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.seller-stat-card {
+    background: white;
+    border: 1px solid var(--seller-border);
+    border-radius: var(--seller-radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: var(--seller-shadow);
+}
+
+.seller-stat-icon {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+    color: var(--seller-primary);
+    font-size: 21px;
+}
+
+.seller-stat-icon.warning {
+    background: #fef3c7;
+    color: var(--seller-warning);
+}
+
+.seller-stat-icon.danger {
+    background: #fee2e2;
+    color: var(--seller-danger);
+}
+
+.seller-stat-card h3 {
+    margin: 0;
+    font-size: 23px;
+}
+
+.seller-stat-card p {
+    margin: 5px 0 0;
+    color: var(--seller-muted);
+    font-size: 13px;
+}
+
+/* =========================================
+   QUICK ACTIONS
+========================================= */
+
+.seller-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+}
+
+.quick-action {
+    padding: 20px;
+    border: 1px solid var(--seller-border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--seller-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: 0.2s ease;
+}
+
+.quick-action i {
+    font-size: 25px;
+    color: var(--seller-primary);
+}
+
+.quick-action span {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.quick-action:hover {
+    transform: translateY(-3px);
+    border-color: var(--seller-primary);
+    box-shadow: var(--seller-shadow);
+}
+
+/* =========================================
+   SECTION HEADER
+========================================= */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.section-header h2 {
+    margin: 0;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-decoration: none;
+    transition: 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background: var(--seller-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--seller-primary-dark);
+}
+
+.btn-success {
+    background: var(--seller-success);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--seller-danger);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--seller-warning);
+    color: white;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.btn-outline {
+    background: white;
+    border: 1px solid var(--seller-border);
+    color: var(--seller-text);
+}
+
+.btn-sm {
+    padding: 7px 11px;
+    font-size: 12px;
+}
+
+/* =========================================
+   TABLE
+========================================= */
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.seller-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.seller-table th,
+.seller-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--seller-border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.seller-table th {
+    background: #f8fafc;
+    color: var(--seller-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.seller-table td {
+    color: var(--seller-text);
+    font-size: 14px;
+}
+
+.seller-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* =========================================
+   PRODUCT IN TABLE
+========================================= */
+
+.seller-product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 180px;
+}
+
+.seller-product img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f1f5f9;
+}
+
+/* =========================================
+   STATUS
+========================================= */
+
+.seller-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-processing {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-shipped {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-delivered {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-low {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.status-approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-inactive {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+[data-theme="dark"] .status-active,
+[data-theme="dark"] .status-delivered,
+[data-theme="dark"] .status-approved,
+body.dark-theme .status-active,
+body.dark-theme .status-delivered,
+body.dark-theme .status-approved {
+    background: rgba(52, 211, 153, 0.16);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .status-processing,
+[data-theme="dark"] .status-pending,
+body.dark-theme .status-processing,
+body.dark-theme .status-pending {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .status-shipped,
+body.dark-theme .status-shipped {
+    background: rgba(96, 165, 250, 0.16);
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .status-cancelled,
+body.dark-theme .status-cancelled {
+    background: rgba(251, 113, 133, 0.16);
+    color: #fda4af;
+}
+
+[data-theme="dark"] .status-low,
+body.dark-theme .status-low {
+    background: rgba(251, 146, 60, 0.16);
+    color: #fdba74;
+}
+
+[data-theme="dark"] .status-inactive,
+body.dark-theme .status-inactive {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+}
+
+/* =========================================
+   ACTION BUTTON
+========================================= */
+
+.action-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--seller-border);
+    border-radius: 7px;
+    background: white;
+    color: var(--seller-primary);
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.action-btn:hover {
+    background: #eff6ff;
+}
+
+.action-btn.danger {
+    color: var(--seller-danger);
+}
+
+.action-btn.danger:hover {
+    background: #fee2e2;
+}
+
+/* =========================================
+   TOOLBAR
+========================================= */
+
+.seller-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.seller-toolbar .form-control {
+    flex: 1;
+    min-width: 180px;
+}
+
+/* =========================================
+   FORM
+========================================= */
+
+.seller-form {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.form-group label {
+    color: var(--seller-text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-control,
+.seller-form input,
+.seller-form select,
+.seller-form textarea {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--seller-border);
+    border-radius: 8px;
+    outline: none;
+    background: white;
+    color: var(--seller-text);
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.seller-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-control:focus,
+.seller-form input:focus,
+.seller-form select:focus,
+.seller-form textarea:focus {
+    border-color: var(--seller-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* =========================================
+   STORE
+========================================= */
+
+.store-profile {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.store-logo {
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+    border-radius: 18px;
+    background: #eff6ff;
+    color: var(--seller-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.store-info h2 {
+    margin: 0 0 10px;
+}
+
+.store-info p {
+    margin: 6px 0;
+    color: var(--seller-muted);
+}
+
+/* =========================================
+   CATEGORY
+========================================= */
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.seller-category {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 17px 5px;
+    border-bottom: 1px solid var(--seller-border);
+}
+
+.seller-category:last-child {
+    border-bottom: none;
+}
+
+.seller-category > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.seller-category i {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #eff6ff;
+    color: var(--seller-primary);
+}
+
+.seller-category span {
+    color: var(--seller-muted);
+    font-size: 13px;
+}
+
+/* =========================================
+   TWO COLUMN
+========================================= */
+
+.seller-two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+}
+
+.seller-order-product {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.seller-order-product img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.seller-order-product h3 {
+    margin: 0 0 7px;
+}
+
+.seller-order-product p {
+    margin: 5px 0;
+    color: var(--seller-muted);
+}
+
+.seller-order-product strong {
+    color: var(--seller-primary);
+    font-size: 18px;
+}
+
+/* =========================================
+   SELLER ACTIONS
+========================================= */
+
+.seller-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* =========================================
+   BALANCE
+========================================= */
+
+.balance-box {
+    padding: 25px;
+    border-radius: 12px;
+    background: #eff6ff;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.balance-box strong {
+    font-size: 32px;
+    color: var(--seller-primary);
+}
+
+.balance-box span {
+    color: var(--seller-muted);
+}
+
+/* =========================================
+   REVIEWS
+========================================= */
+
+.review-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--seller-border);
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.review-stars {
+    color: #f59e0b;
+    letter-spacing: 2px;
+}
+
+.review-product {
+    color: var(--seller-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.review-item p {
+    color: var(--seller-muted);
+}
+
+/* =========================================
+   REPORTS
+========================================= */
+
+.report-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+.report-summary > div {
+    padding: 20px;
+    border: 1px solid var(--seller-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.report-summary span {
+    color: var(--seller-muted);
+    font-size: 13px;
+}
+
+.report-summary strong {
+    color: var(--seller-text);
+    font-size: 23px;
+}
+
+/* =========================================
+   NOTIFICATIONS
+========================================= */
+
+.seller-notification {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 17px;
+    border-bottom: 1px solid var(--seller-border);
+    border-radius: 8px;
+}
+
+.seller-notification:last-child {
+    border-bottom: none;
+}
+
+.seller-notification.unread {
+    background: #eff6ff;
+}
+
+.notification-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: var(--seller-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seller-notification h3 {
+    margin: 0 0 5px;
+    font-size: 15px;
+}
+
+.seller-notification p {
+    margin: 0 0 5px;
+    color: var(--seller-muted);
+    font-size: 13px;
+}
+
+/* =========================================
+   DANGER CARD
+========================================= */
+
+.danger-card {
+    border-color: #fecaca;
+}
+
+.danger-card h2 {
+    color: var(--seller-danger);
+}
+
+.danger-card p {
+    color: var(--seller-muted);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .seller-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .seller-quick-actions {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .report-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+
+    .seller-container {
+        padding: 15px;
+    }
+
+    .seller-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .seller-two-column {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .store-profile {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .seller-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .seller-quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .report-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .seller-card {
+        padding: 16px;
+    }
+
+    .seller-page-header h1 {
+        font-size: 23px;
+    }
+
+    .store-profile {
+        flex-direction: column;
+    }
+
+    .seller-order-product {
+        align-items: flex-start;
+    }
+
+    .seller-toolbar {
+        flex-direction: column;
+    }
+
+    .seller-toolbar .form-control {
+        width: 100%;
+    }
+
+    .seller-actions {
+        flex-direction: column;
+    }
+
+    .seller-actions .btn {
+        width: 100%;
+    }
+}

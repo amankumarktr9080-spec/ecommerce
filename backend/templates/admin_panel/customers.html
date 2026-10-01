@@ -1,0 +1,87 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Customer Directory & Accounts{% endblock %}
+{% block page_subtitle %}Manage buyer accounts, wallet balances, purchase history, and access privileges{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-users" style="color: var(--primary);"></i> Registered Buyers ({{ customers|length }})
+        </h3>
+
+        <!-- Search Bar -->
+        <form method="GET" style="display: flex; gap: 8px;">
+            <input type="text" name="q" value="{{ search_q }}" placeholder="Search customer name, email, phone..." style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); min-width: 260px;">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-magnifying-glass"></i></button>
+            {% if search_q %}
+            <a href="/admin-panel/customers/" class="btn btn-secondary btn-sm"><i class="fa-solid fa-xmark"></i></a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Wallet Balance</th>
+                    <th>Registration Date</th>
+                    <th>Account Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in customers %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 130, 246, 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                                {{ c.first_name|default:c.username|slice:":1"|upper }}
+                            </div>
+                            <strong style="color: var(--text-primary);">{{ c.get_full_name|default:c.username }}</strong>
+                        </div>
+                    </td>
+                    <td><span style="font-family: monospace; color: var(--text-secondary);">@{{ c.username }}</span></td>
+                    <td>{{ c.email }}</td>
+                    <td>{{ c.phone|default:"N/A" }}</td>
+                    <td>
+                        <strong style="color: #10b981; font-size: 0.95rem;">₹{{ c.wallet_balance }}</strong>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ c.date_joined|date:"d M Y" }}</span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{% if c.is_active %}success{% else %}danger{% endif %}">
+                            {% if c.is_active %}Active{% else %}Suspended{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="/admin-panel/customers/{{ c.id }}/" class="btn btn-secondary btn-sm" title="View Profile & Orders">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <a href="/admin-panel/customers/{{ c.id }}/toggle-block/" class="btn btn-secondary btn-sm" title="Toggle Block / Unblock">
+                                {% if c.is_active %}
+                                <i class="fa-solid fa-lock" style="color: #ef4444;"></i>
+                                {% else %}
+                                <i class="fa-solid fa-lock-open" style="color: #10b981;"></i>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 40px;">No customers found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

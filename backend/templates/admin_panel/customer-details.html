@@ -1,0 +1,94 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Customer Profile: {{ customer.get_full_name|default:customer.username }}{% endblock %}
+{% block page_subtitle %}Buyer lifetime spend, saved addresses, and order history{% endblock %}
+
+{% block panel_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <a href="/admin-panel/customers/" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Customers
+    </a>
+    <a href="/admin-panel/customers/{{ customer.id }}/toggle-block/" class="btn btn-{% if customer.is_active %}secondary{% else %}primary{% endif %}">
+        {% if customer.is_active %}
+        <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Suspend Customer Account
+        {% else %}
+        <i class="fa-solid fa-check" style="color: #10b981;"></i> Activate Account
+        {% endif %}
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    <!-- Profile Card -->
+    <div class="glass-card" style="padding: 24px; height: fit-content;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(59, 130, 246, 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; margin: 0 auto 12px;">
+                {{ customer.first_name|default:customer.username|slice:":1"|upper }}
+            </div>
+            <h3 style="margin: 0; color: var(--text-primary);">{{ customer.get_full_name|default:customer.username }}</h3>
+            <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-family: monospace;">@{{ customer.username }}</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Email:</span>
+                <strong style="color: var(--text-primary);">{{ customer.email }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Phone:</span>
+                <strong style="color: var(--text-primary);">{{ customer.phone|default:"N/A" }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Wallet Balance:</span>
+                <strong style="color: #10b981; font-size: 1.05rem;">₹{{ customer.wallet_balance }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Status:</span>
+                <span class="badge badge-{% if customer.is_active %}success{% else %}danger{% endif %}">
+                    {% if customer.is_active %}Active{% else %}Suspended{% endif %}
+                </span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Registered:</span>
+                <span style="color: var(--text-primary);">{{ customer.date_joined|date:"d M Y" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Placed Table -->
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-receipt" style="color: var(--primary);"></i> Customer Orders ({{ orders|length }})
+        </h3>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Date</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td><strong style="color: var(--primary);">#{{ o.order_number }}</strong></td>
+                        <td>{{ o.created_at|date:"d M Y" }}</td>
+                        <td><strong>₹{{ o.total_amount }}</strong></td>
+                        <td><span class="badge badge-{% if o.status == 'delivered' %}success{% else %}info{% endif %}">{{ o.get_status_display }}</span></td>
+                        <td><a href="/admin-panel/orders/{{ o.id }}/" class="btn btn-secondary btn-sm"><i class="fa-solid fa-eye"></i></a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">No orders placed yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

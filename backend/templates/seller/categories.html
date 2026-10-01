@@ -1,0 +1,25 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Vendor Product Categories{% endblock %}
+{% block page_subtitle %}Explore active platform product categories for listing items{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-primary);">Product Categories</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+        {% for cat in categories %}
+            <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600;">
+                <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> {{ cat.name }}
+            </div>
+        {% empty %}
+            <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600;">
+                <i class="fa-solid fa-laptop" style="color: var(--primary);"></i> Electronics
+            </div>
+            <div style="padding: 16px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600;">
+                <i class="fa-solid fa-headphones" style="color: var(--primary);"></i> Audio & Headphones
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

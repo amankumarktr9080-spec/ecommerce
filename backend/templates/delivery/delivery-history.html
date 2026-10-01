@@ -1,0 +1,91 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Delivery History & Trips{% endblock %}
+{% block page_subtitle %}Review all your completed delivery drop-offs and verified OTP handovers{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Completed Shipments ({{ orders|length }})
+        </h3>
+        <span class="badge badge-success" style="padding: 6px 14px; border-radius: 20px; font-weight: 700;">
+            100% Doorstep OTP Verified
+        </span>
+    </div>
+
+    {% if orders %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer Name</th>
+                    <th>Delivery Address</th>
+                    <th>Delivered Date & Time</th>
+                    <th>OTP Verified</th>
+                    <th>Signature</th>
+                    <th>Rider Earning</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary);">#{{ o.order_number }}</strong>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                                {{ o.customer.first_name|default:o.customer.username|slice:":1"|upper }}
+                            </div>
+                            <span>{{ o.customer.get_full_name|default:o.customer_name }}</span>
+                        </div>
+                    </td>
+                    <td style="max-width: 220px; font-size: 0.85rem; color: var(--text-secondary);">
+                        {{ o.shipping_address|truncatechars:45 }}
+                    </td>
+                    <td>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ o.created_at|date:"d M Y, h:i A" }}</span>
+                    </td>
+                    <td>
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-family: monospace;">
+                            <i class="fa-solid fa-circle-check"></i> {{ o.delivery_otp }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if o.customer_signature %}
+                        <span style="font-size: 0.8rem; color: #10b981;">
+                            <i class="fa-solid fa-pen-nib"></i> Verified
+                        </span>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">OTP Handover</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong style="color: #10b981; font-size: 1rem;">₹{{ o.delivery_partner_earning }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-success">
+                            Delivered
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 60px 20px;">
+        <i class="fa-solid fa-box-open" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 16px;"></i>
+        <h4 style="color: var(--text-primary); margin-bottom: 8px;">No Completed Deliveries Yet</h4>
+        <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 20px;">Assigned orders will appear in your active deliveries.</p>
+        <a href="/delivery/active-delivery/" class="btn btn-primary">
+            <i class="fa-solid fa-motorcycle"></i> View Active Deliveries
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

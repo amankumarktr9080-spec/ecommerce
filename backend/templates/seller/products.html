@@ -1,0 +1,76 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Product Management{% endblock %}
+{% block page_subtitle %}Manage your active listings, inventory stock, and return options{% endblock %}
+
+{% block panel_content %}
+<div class="glass-card" style="padding: 24px; margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">
+            Your Product Catalog ({{ products.count }})
+        </h3>
+        <a href="/seller/products/add/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; text-decoration: none; padding: 10px 18px;">
+            <i class="fa-solid fa-plus"></i> Add New Product
+        </a>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+                <tr style="background: var(--bg-app); text-align: left;">
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Product & Code</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Category</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Base Earning</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Customer Price</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Stock</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color);">Policy</th>
+                    <th style="padding: 12px 14px; border-bottom: 1px solid var(--border-color); text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                    <tr onclick="if (!event.target.closest('a, button, form')) window.location.href='/seller/products/{{ p.id }}/';" style="border-bottom: 1px solid var(--border-color); cursor: pointer;">
+                        <td style="padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+                            <img src="{{ p.main_image_url }}" alt="{{ p.title }}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border-color);">
+                            <div>
+                                <span style="font-size: 0.75rem; font-weight: 800; color: var(--primary);">{{ p.item_code }}</span>
+                                <h4 style="margin: 0; font-size: 0.88rem; color: var(--text-primary);">{{ p.title|truncatechars:30 }}</h4>
+                            </div>
+                        </td>
+                        <td style="padding: 12px 14px;">{{ p.category.name|default:"General" }}</td>
+                        <td style="padding: 12px 14px; font-weight: 700; color: #059669;">₹{{ p.base_price }}</td>
+                        <td style="padding: 12px 14px; font-weight: 800; color: var(--text-primary);">₹{{ p.selling_price }}</td>
+                        <td style="padding: 12px 14px;">
+                            <span style="font-weight: 700; color: {% if p.stock < 15 %}#ef4444{% else %}#10b981{% endif %};">
+                                {{ p.stock }} units
+                            </span>
+                        </td>
+                        <td style="padding: 12px 14px; font-size: 0.78rem;">
+                            {% if p.is_returnable %}<span style="color: #059669;">{{ p.return_window_days }}D Ret</span>{% else %}<span style="color: var(--text-muted);">No Ret</span>{% endif %} • 
+                            {% if p.is_replaceable %}<span style="color: #4f46e5;">{{ p.replacement_window_days }}D Rep</span>{% else %}<span style="color: var(--text-muted);">No Rep</span>{% endif %}
+                        </td>
+                        <td style="padding: 12px 14px; text-align: center;">
+                            <a href="{% url 'seller:edit_product' p.id %}" class="btn btn-secondary btn-sm" title="Edit Product" aria-label="Edit {{ p.title }}" style="text-decoration: none; margin-right: 4px;">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </a>
+                            <form method="POST" action="/seller/products/" style="display: inline;" onsubmit="return confirm('Delete this product listing?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="product_id" value="{{ p.id }}">
+                                <button type="submit" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 6px;" title="Delete Product">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No products listed yet. Click 'Add New Product' above.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Active Delivery Job #{{ order.order_number }}{% endblock %}
+{% block page_subtitle %}Live delivery execution, doorstep customer OTP verification, and digital signature{% endblock %}
+
+{% block panel_content %}
+{% if order %}
+<div style="margin-bottom: 20px;">
+    <a href="/delivery/active-delivery/" class="action-pill-btn" style="display: inline-flex; background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); text-decoration: none;">
+        <i class="fa-solid fa-arrow-left"></i> All Active Deliveries
+    </a>
+</div>
+<div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; margin-bottom: 40px;">
+    
+    <!-- Left: Step Controller & OTP Verification -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+
+        <!-- Job Status Card -->
+        <div class="glass-card" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <span class="role-badge admin">TRIP IN PROGRESS</span>
+                <strong style="font-size: 1.15rem; color: #10b981;">Earning for this trip: ₹{{ order.delivery_partner_earning }}</strong>
+            </div>
+            <p style="margin: -6px 0 16px; color: var(--text-secondary); font-size: 0.88rem;">
+                Expected delivery:
+                <strong style="color: var(--text-primary);">{% if order.estimated_delivery %}{{ order.estimated_delivery|date:"d M Y" }}{% else %}Not scheduled yet{% endif %}</strong>
+            </p>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;">
+                <form method="POST" action="/delivery/active-delivery/{{ order.id }}/">{% csrf_token %}<input type="hidden" name="action" value="skip_order"><button type="submit" class="action-pill-btn" style="background: #f59e0b; color: #fff; border: none;">Unassign</button></form>
+                <details style="position: relative;">
+                    <summary class="action-pill-btn" style="background: #6366f1; color: #fff; border: none; cursor: pointer; list-style: none;">Reschedule</summary>
+                    <form method="POST" action="/delivery/active-delivery/{{ order.id }}/" style="position: absolute; z-index: 5; top: calc(100% + 8px); left: 0; width: min(380px, calc(100vw - 48px)); padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reschedule_order">
+                        <label for="newDeliveryEta" style="font-size: 0.82rem; font-weight: 700;">New delivery date</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input id="newDeliveryEta" type="date" name="estimated_delivery" value="{{ reschedule_value }}" min="{{ reschedule_min }}" inputmode="none" onkeydown="if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete') event.preventDefault();" onpaste="event.preventDefault();" ondrop="event.preventDefault();" required style="flex: 1; min-width: 0; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-app); color: var(--text-primary);">
+                            <button type="button" aria-label="Open date calendar" title="Open date calendar" onclick="const dateInput = document.getElementById('newDeliveryEta'); if (dateInput.showPicker) dateInput.showPicker(); else { dateInput.focus(); dateInput.click(); }" style="display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 7px; padding: 0 11px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-app); color: var(--text-primary); cursor: pointer; white-space: nowrap;">
+                                <i class="fa-solid fa-calendar" aria-hidden="true"></i><span>Calendar</span>
+                            </button>
+                        </div>
+                        <label for="rescheduleReason" style="font-size: 0.82rem; font-weight: 700;">Reason</label>
+                        <textarea id="rescheduleReason" name="reschedule_reason" rows="3" maxlength="300" required placeholder="Tell the customer why delivery is changing" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-app); color: var(--text-primary); resize: vertical;">{{ reschedule_reason }}</textarea>
+                        <button type="submit" class="action-pill-btn" style="background: #6366f1; color: #fff; border: none;">Save new delivery time</button>
+                    </form>
+                </details>
+                <form method="POST" action="/delivery/active-delivery/{{ order.id }}/" onsubmit="return confirm('Cancel this delivery assignment?');">{% csrf_token %}<input type="hidden" name="action" value="cancel_order"><button type="submit" class="action-pill-btn" style="background: #ef4444; color: #fff; border: none;">Cancel</button></form>
+            </div>
+
+            <!-- Workflow Progress Actions -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <form method="POST" action="/delivery/active-delivery/{{ order.id }}/" style="flex: 1;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="reached_seller">
+                        <button type="submit" class="action-pill-btn" style="width: 100%; justify-content: center; background: #4f46e5; color: #fff; border: none; padding: 10px;">
+                            <i class="fa-solid fa-store"></i> 1. Reached Vendor Store
+                        </button>
+                    </form>
+
+                    <form method="POST" action="/delivery/active-delivery/{{ order.id }}/" style="flex: 1;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="picked_up">
+                        <button type="submit" class="action-pill-btn" style="width: 100%; justify-content: center; background: #f59e0b; color: #fff; border: none; padding: 10px;">
+                            <i class="fa-solid fa-box-open"></i> 2. Package Picked Up
+                        </button>
+                    </form>
+
+                    <form method="POST" action="/delivery/active-delivery/{{ order.id }}/" style="flex: 1;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <input type="hidden" name="action" value="reached_customer">
+                        <button type="submit" class="action-pill-btn" style="width: 100%; justify-content: center; background: #06b6d4; color: #fff; border: none; padding: 10px;">
+                            <i class="fa-solid fa-door-open"></i> 3. Reached Doorstep
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- STEP 4: DOORSTEP OTP VERIFICATION & SIGNATURE -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 2px dashed #10b981; border-radius: 16px; padding: 24px;">
+                <h4 style="margin: 0 0 6px; font-size: 1.1rem; color: #059669; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-shield-halved"></i> Doorstep Customer OTP & Signature
+                </h4>
+                <p style="margin: 0 0 16px; font-size: 0.85rem; color: var(--text-secondary);">
+                    Ask customer for the <strong>4-digit delivery verification OTP</strong> displayed in their Track Order screen.
+                </p>
+
+                <form id="deliveryCompletionForm" method="POST" action="/delivery/active-delivery/{{ order.id }}/" style="display: flex; flex-direction: column; gap: 16px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                    <input type="hidden" name="action" value="verify_otp_deliver">
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">
+                            Enter 4-Digit Customer OTP:
+                        </label>
+                        <input type="text" name="entered_otp" required maxlength="6" placeholder="e.g. 4921"
+                               style="width: 100%; padding: 14px; border: 2px solid #10b981; border-radius: 10px; font-size: 1.5rem; font-weight: 900; letter-spacing: 6px; text-align: center; background: var(--bg-surface); color: var(--text-primary);">
+                    </div>
+
+                    <!-- Digital Signature Canvas -->
+                    <div>
+                        <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px;">
+                            Customer Digital Signature (Sign on screen):
+                        </label>
+                        <div style="border: 1px solid var(--border-color); border-radius: 10px; background: #ffffff; padding: 8px; text-align: center;">
+                            <canvas id="sigCanvas" width="680" height="240" aria-label="Customer signature" style="touch-action: none; cursor: crosshair; background: #fff; width: 100%; height: 120px; border-radius: 6px;"></canvas>
+                            <input type="hidden" name="signature_data" id="sigData">
+                            <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                                <button type="button" onclick="clearSignature()" style="background: none; border: none; color: #ef4444; font-size: 0.78rem; cursor: pointer;">
+                                    Clear Signature
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" onclick="prepareSignature()" style="width: 100%; padding: 14px; background: #10b981; color: #fff; border: none; border-radius: 12px; font-weight: 800; font-size: 1.05rem; cursor: pointer; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fa-solid fa-circle-check"></i> Verify OTP & Mark Order Delivered
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right: Addresses & Map Shortcut -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        
+        <!-- Pickup Point (Vendor) -->
+        <div class="glass-card" style="padding: 20px;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: #4f46e5; text-transform: uppercase;">1. Pickup Address (Vendor)</span>
+            <h4 style="margin: 4px 0; font-size: 1rem; color: var(--text-primary);">{{ order.seller.store_name }}</h4>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                {{ order.seller.business_address }}
+            </p>
+            <small style="color: var(--text-muted); display: block; margin-top: 6px;">Vendor Phone: {{ order.seller.phone }}</small>
+        </div>
+
+        <!-- Drop Point (Customer) -->
+        <div class="glass-card" style="padding: 20px;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">2. Drop Destination (Customer)</span>
+            <h4 style="margin: 4px 0; font-size: 1rem; color: var(--text-primary);">{{ order.customer_name }}</h4>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                {{ order.shipping_address }}
+            </p>
+            <small style="color: var(--text-muted); display: block; margin-top: 6px;">Customer Contact: {{ order.customer_phone }}</small>
+        </div>
+
+        <!-- Live Map Button -->
+        <div class="glass-card" style="padding: 20px; text-align: center;">
+            <a href="/delivery/navigation/?order_id={{ order.id }}" class="action-pill-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #4f46e5; color: #fff; border: none; padding: 14px; text-decoration: none; font-weight: 700;">
+                <i class="fa-solid fa-map-location-dot"></i> Open Turn-by-Turn GPS Map
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Digital Signature Drawing Canvas
+let canvas, ctx, isDrawing = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    canvas = document.getElementById('sigCanvas');
+    if (canvas) {
+        ctx = canvas.getContext('2d');
+        canvas.style.backgroundColor = '#ffffff';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointerleave', stopDrawing);
+        canvas.addEventListener('pointercancel', stopDrawing);
+        document.getElementById('deliveryCompletionForm').addEventListener('submit', prepareSignature);
+    }
+});
+
+function startDrawing(e) {
+    isDrawing = true;
+    const rect = canvas.getBoundingClientRect();
+    canvas.setPointerCapture?.(e.pointerId);
+    ctx.beginPath();
+    ctx.moveTo((e.clientX - rect.left) * canvas.width / rect.width, (e.clientY - rect.top) * canvas.height / rect.height);
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo((e.clientX - rect.left) * canvas.width / rect.width, (e.clientY - rect.top) * canvas.height / rect.height);
+    ctx.stroke();
+}
+
+function stopDrawing() {
+    isDrawing = false;
+}
+
+function clearSignature() {
+    if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#0f172a';
+    }
+}
+
+function prepareSignature(event) {
+    if (event) event.preventDefault();
+    if (canvas) {
+        document.getElementById('sigData').value = canvas.toDataURL();
+    }
+    if (event) event.target.submit();
+}
+</script>
+{% else %}
+<div class="glass-card" style="text-align: center; padding: 60px 20px;">
+    <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: #10b981; margin-bottom: 12px;"></i>
+    <h3>No active delivery in progress</h3>
+    <p style="color: var(--text-secondary);">Choose an assigned order from the active deliveries list to begin.</p>
+    <a href="/delivery/active-delivery/" class="action-pill-btn" style="display: inline-block; background: var(--primary); color: #fff; border: none; margin-top: 12px;">
+        View Active Deliveries
+    </a>
+</div>
+{% endif %}
+{% endblock %}

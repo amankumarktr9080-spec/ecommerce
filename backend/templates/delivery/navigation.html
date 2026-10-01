@@ -1,0 +1,70 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Turn-by-Turn GPS Navigation{% endblock %}
+{% block page_subtitle %}Interactive live road route navigation to delivery destination{% endblock %}
+
+{% block panel_content %}
+{% if order %}
+<div class="glass-card" style="padding: 16px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">
+                Navigating to: {{ order.customer_name|default:"Customer" }}
+            </h3>
+            <small style="color: var(--text-secondary);">Address: {{ order.shipping_address|default:"Address unavailable" }}</small>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="tel:{{ order.customer_phone|default:'' }}" class="action-pill-btn" style="background: #10b981; color: #fff; border: none; text-decoration: none;">
+                <i class="fa-solid fa-phone"></i> Call Customer
+            </a>
+            <a href="/delivery/active-delivery/{{ order.id }}/" class="action-pill-btn" style="background: var(--primary); color: #fff; border: none; text-decoration: none;">
+                <i class="fa-solid fa-shield-halved"></i> Verify OTP
+            </a>
+        </div>
+    </div>
+
+    <!-- Map Canvas Element -->
+    <div id="riderNavMap" style="width: 100%; height: 550px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border-color);"></div>
+
+    <!-- Live HUD Stats Bar -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-top: 14px; text-align: center;">
+        <div style="background: var(--bg-app); padding: 12px; border-radius: 10px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Speed</span>
+            <strong style="font-size: 1.2rem; color: var(--text-primary);">34 km/h</strong>
+        </div>
+        <div style="background: var(--bg-app); padding: 12px; border-radius: 10px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Distance Remaining</span>
+            <strong style="font-size: 1.2rem; color: var(--primary);">2.4 km</strong>
+        </div>
+        <div style="background: var(--bg-app); padding: 12px; border-radius: 10px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">ETA</span>
+            <strong style="font-size: 1.2rem; color: #10b981;">~ 8 Mins</strong>
+        </div>
+        <div style="background: var(--bg-app); padding: 12px; border-radius: 10px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Trip Payout</span>
+            <strong style="font-size: 1.2rem; color: #f59e0b;">₹{{ order.delivery_partner_earning|default:"0.00" }}</strong>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="glass-card delivery-empty-state" style="padding: 40px 24px; text-align: center;">
+    <i class="fa-solid fa-route" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 14px;"></i>
+    <h2 style="margin: 0 0 8px; color: var(--text-primary);">No active delivery</h2>
+    <p style="margin: 0 0 20px; color: var(--text-secondary);">There is no delivery assigned to you right now.</p>
+    <a href="/delivery/active-delivery/" class="action-pill-btn" style="display: inline-flex; background: var(--primary); color: #fff; border: none; text-decoration: none;">
+        <i class="fa-solid fa-route"></i> View Active Deliveries
+    </a>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    {% if order %}
+    initLiveOrderMap('riderNavMap');
+    {% endif %}
+});
+</script>
+{% endblock %}
+{% endblock %}

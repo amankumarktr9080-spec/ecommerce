@@ -1,0 +1,93 @@
+{% extends "base/panel_base.html" %}
+{% load static %}
+
+{% block page_title %}Vendor Store: {{ seller.store_name }}{% endblock %}
+{% block page_subtitle %}Merchant credentials, commission rate override, and catalog listings{% endblock %}
+
+{% block panel_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <a href="/admin-panel/sellers/" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Sellers
+    </a>
+    <a href="/admin-panel/sellers/{{ seller.id }}/toggle-status/" class="btn btn-{% if seller.is_approved %}secondary{% else %}primary{% endif %}">
+        {% if seller.is_approved %}
+        <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Suspend Vendor Store
+        {% else %}
+        <i class="fa-solid fa-check" style="color: #10b981;"></i> Approve Store
+        {% endif %}
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    <div class="glass-card" style="padding: 24px; height: fit-content;">
+        <h3 style="margin: 0 0 16px 0; color: var(--text-primary); font-size: 1.15rem;">{{ seller.store_name }}</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Merchant Owner:</span>
+                <strong>{{ seller.user.get_full_name|default:seller.user.username }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Username:</span>
+                <strong style="font-family: monospace;">@{{ seller.user.username }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Commission Rate:</span>
+                <strong style="color: #10b981;">{{ seller.commission_rate }}%</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">GSTIN:</span>
+                <strong style="font-family: monospace;">{{ seller.gst_number|default:"N/A" }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">KYC Status:</span>
+                <span class="badge badge-{% if seller.kyc_status == 'verified' %}success{% else %}warning{% endif %}">{{ seller.get_kyc_status_display }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">Bank Account:</span>
+                <span>{{ seller.bank_name|default:"HDFC Bank" }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-secondary);">UPI ID:</span>
+                <span>{{ seller.upi_id|default:"vendor@upi" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding: 24px;">
+        <h3 style="margin: 0 0 16px 0; font-size: 1.15rem; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-boxes-stacked" style="color: var(--primary);"></i> Listed Products ({{ products|length }})
+        </h3>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Item Code</th>
+                        <th>Product Title</th>
+                        <th>Base Price</th>
+                        <th>Final Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td><span class="badge" style="background: rgba(59, 130, 246, 0.15); color: var(--primary); font-family: monospace;">{{ p.item_code }}</span></td>
+                        <td><strong>{{ p.title|truncatechars:30 }}</strong></td>
+                        <td>₹{{ p.base_price }}</td>
+                        <td><strong style="color: var(--primary);">₹{{ p.final_price }}</strong></td>
+                        <td>{{ p.stock_quantity }}</td>
+                        <td><span class="badge badge-{% if p.is_active %}success{% else %}danger{% endif %}">{% if p.is_active %}Live{% else %}Hidden{% endif %}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No products listed.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
