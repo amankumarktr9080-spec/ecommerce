@@ -9,8 +9,7 @@ venv/
 **/venv/
 **/.venv/
 
-*.sqlite3
-*.sqlite3-*
+*.sqlite3*
 backend/sqlite_data.json
 backend/media/**
 !backend/media/.gitkeep
